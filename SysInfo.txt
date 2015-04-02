@@ -1,4 +1,4 @@
-C:\Users\Bryan\Documents\MATLAB\Bayes_2014\data\2015-3-12\irf-240pm
-C:\Users\Bryan\Documents\MATLAB\Bayes_2014\data\2015-3-12\wigs
-C:\Users\Bryan\Documents\MATLAB\Bayes_2014\data\2014-6-13\extract-10m
-C:\Users\Bryan\Documents\MATLAB\Bayes_2014\data\2015-3-12\donor-only
+C:\Users\Bryan\Documents\MATLAB\data\2015-4-2\irf
+C:\Users\Bryan\Documents\MATLAB\data\2015-4-2\wigs
+C:\Users\Bryan\Documents\MATLAB\data\2015-3-17\wigs
+C:\Users\Bryan\Documents\MATLAB\data\2015-4-2\donor-only

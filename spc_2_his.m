@@ -11,7 +11,16 @@ for ts=1:tsm
     if tsm ==1
         file_name2 = strcat(file_name,'.sdt');
     else
+        if tsm <10
         file_name2 = strcat(file_name,'_c',num2str(ts),'.sdt');
+        elseif tsm < 100
+            if ts<10
+                file_name2 = strcat(file_name,'_c0',num2str(ts),'.sdt');
+            else
+                file_name2 = strcat(file_name,'_c',num2str(ts),'.sdt');
+            end
+        end
+        
     end
     sdt = bh_readsetup([pth_sdt file_name2]); block=1;
     ch = bh_getdatablock(sdt,block); %raw lifetime data

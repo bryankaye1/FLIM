@@ -3,52 +3,52 @@
 %pr means FRET fraction now
 %clear;
 %extra comment
-dbstop if error
 
-tsm=3;
+
+tsm=20; %%Can take in up to 100
 analyze=0;
-ngr = 64;%jind*100000;
+ngr = 32;%jind*100000;
 jmax = 1;
 exptmax = 1;
 cyclesmax = 1;
 [input] = ini_input(cyclesmax,exptmax,jmax); %Initialize input structure
-comment = 'no comment';
+comment = 'junk test';
 tfw = .6; %(el-1)*.1;
 tbac = .2;
 % for mnum = 1:5
 %     for snum = 1:3
-for el1 = 2:5
+for el1 = 2:2:2
     for el2=1:1
-dataname = strcat('m',num2str(el1));%,'-spot',num2str(el2));
-%dataname = strcat('m4-exposure-',num2str(el2));
-%dataname = 'donor-only';
+%dataname = strcat('m',num2str(el1));%,'-spot',num2str(el2));
+%dataname = strcat('m4-exposure',num2str(el2));
+dataname = 'm0_0p75mw';
 jind =0;
 while jind < jmax %for jind = 1:jmax
     jind = jind +1;
     for expt = 1:exptmax
         for cindex = 1:cyclesmax
-            irfname = 'irf-240pm';
+            irfname = 'irf';
             data_shift_name = 'donor-only';
 %                             if el <10
 %                                 str(cindex).name = strcat('t1-m2_c0',num2str(el));
 %                             else
 %                                 str(cindex).name = strcat('t1-m2_c',num2str(el));
 %                             end
-            pth_int = 'C:\Users\Bryan\Documents\MATLAB\Bayes_2014\data\2015-3-12\';
+            pth_int = 'C:\Users\Bryan\Documents\MATLAB\data\2015-4-2\';
             int_name = 'atto565-10um.sdt';
             
             %% Make IRF, wigs, IRF shift, wigs shift, and extract signal, read in data path
             
             sysinfo = 0; % Set to 1 if you want to force a rerun of make_irf_wig_ext
-            pth_irf = 'C:\Users\Bryan\Documents\MATLAB\Bayes_2014\data\2015-3-12\'; %Type the file path of the Instrument Response Function (IRF) here.
+            pth_irf = pth_int; %Type the file path of the Instrument Response Function (IRF) here.
             %dataname = str(cindex).name;      
             pth_data = pth_irf;
             
-            pth_wigs = 'C:\Users\Bryan\Documents\MATLAB\Bayes_2014\data\2015-3-12\';
+            pth_wigs = pth_int;
             wigsname = 'wigs';
             
-            pth_ext = 'C:\Users\Bryan\Documents\MATLAB\Bayes_2014\data\2014-6-13\';
-            extname = 'extract-10m';
+            pth_ext = 'C:\Users\Bryan\Documents\MATLAB\data\2015-3-17\';
+            extname = 'wigs';
             pth_data_for_shift = pth_irf;
             
             cppout = fopen('SysInfo.txt');
@@ -85,9 +85,9 @@ while jind < jmax %for jind = 1:jmax
             %% Set search parameters
             
             w1step = .005; w1min= 1.49; w1max = 1.49;%1.6 used for extract 8/27 and 9/5 (actual 9/5 is 1.59) %1.5 used for taxol extract; %.8-2 1.05 %w1min must be an integer multiple of w1step.
-            w2step = .002; w2min =  3.84; w2max = 3.84;%3.8 used for 3/7/15 data %3.745 usd for 8/27 E %3.87 used for taxol extract; %3.81 was found for 8/25 b80 and 8/24 extract
+            w2step = .002; w2min =  3.82; w2max = 3.82;%3.8 used for 3/7/15 data %3.745 usd for 8/27 E %3.87 used for taxol extract; %3.81 was found for 8/25 b80 and 8/24 extract
             
-            fracstep = 0.002;%.005 %.005 with w1/w2 set is 10sec per group
+            fracstep = 0.005;%.005 %.005 with w1/w2 set is 10sec per group
             prstep = fracstep; prmin=0; prmax = 1;
             w02step = fracstep; w02min = 0; w02max = 1;
             extstep = fracstep; extmin = 0; extmax = 0;
@@ -178,7 +178,6 @@ while jind < jmax %for jind = 1:jmax
 end
 [MatName,SimName] = write_to_mlist; fprintf('DN = %s FN = %s\n',dataname,MatName);
 save(MatName, 'input');
-
     end
 end
 

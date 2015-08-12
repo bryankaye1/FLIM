@@ -1,4 +1,4 @@
-C:\Users\Bryan\Documents\MATLAB\data\2015-4-2\irf
-C:\Users\Bryan\Documents\MATLAB\data\2015-4-2\wigs
-C:\Users\Bryan\Documents\MATLAB\data\2015-3-17\wigs
-C:\Users\Bryan\Documents\MATLAB\data\2015-4-2\donor-only
+C:\Users\Bryan\Documents\MATLAB\data\2015-08-11\irf
+C:\Users\Bryan\Documents\MATLAB\data\2015-08-05\wigs
+C:\Users\Bryan\Documents\MATLAB\data\2015-08-05\wigs
+C:\Users\Bryan\Documents\MATLAB\data\2015-08-11\tube1-noran

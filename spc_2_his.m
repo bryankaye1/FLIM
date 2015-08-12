@@ -2,7 +2,7 @@ function [data,jmax, nphi,varargout] = spc_2_his(tmini,tmaxi,file_name,pth_sdt,n
 %sort pixels by intensity, equal pixels per group
 
 
-for ts=1:tsm
+for ts=1:tsm %ts and tsm is for combining multiple exposures into one image
     if length(file_name)>3 %fixes filename if sdt is appended to file name
         if strcmp(file_name(end-3:end),'.sdt')
             file_name=file_name(1:end-4);

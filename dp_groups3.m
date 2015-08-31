@@ -11,12 +11,12 @@ jmax = 1;
 exptmax = 1;
 cyclesmax = 1;
 [input] = ini_input(cyclesmax,exptmax,jmax); %Initialize input structure
-comment = 'donor only';
+comment = 'find fret fraction given w2/w1 = 3.78/1.6';
 tfw = .6;
 tbac = .2;
 % for mnum = 1:5
 %     for snum = 1:3
-for el1 = 1:3
+for el1 = 4:4
     dataname = 'm3-spot';
     dataname = strcat(dataname,num2str(el1));
     
@@ -35,11 +35,9 @@ for el1 = 1:3
             end
             fprintf('DN is %s\n', dataname);
         end
-        
         for cindex = 1:cyclesmax %determined by number of w2 spots
             %             dataname = 'tube2-noran-spot';
-            %             dataname = strcat(dataname,num2str(cindex));
-            
+            %             dataname = strcat(dataname,num2str(cindex)); 
             jind =0;
             while jind < jmax %j is determined by number of pixel groups
                 jind = jind +1;
@@ -62,10 +60,10 @@ for el1 = 1:3
                 
                 %% Set search parameters
                 
-                w1step = .005; w1min= 1; w1max = 2;%1.73  %1.6 used for extract 8/27 and 9/5 (actual 9/5 is 1.59) %1.5 used for taxol extract; %.8-2 1.05 %w1min must be an integer multiple of w1step.
+                w1step = .002; w1min= 1.6; w1max = 1.6;%1.73  %1.6 used for extract 8/27 and 9/5 (actual 9/5 is 1.59) %1.5 used for taxol extract; %.8-2 1.05 %w1min must be an integer multiple of w1step.
                 w2step = .005; w2min =  3.78; w2max = 3.78;%3.802%3.82/1.49   %3.8 used for 3/7/15 data %3.745 usd for 8/27 E %3.87 used for taxol extract; %3.81 was found for 8/25 b80 and 8/24 extract
                 
-                fracstep = 0.002;%.005 %.005 with w1/w2 set is 10sec per group
+                fracstep = 0.002; %.005 with w1/w2 set is 10sec per group
                 prstep = fracstep; prmin=0; prmax = 1;
                 w02step = fracstep; w02min = 0; w02max = 1;
                 extstep = fracstep; extmin = 0; extmax = 0;

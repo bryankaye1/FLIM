@@ -1,4 +1,4 @@
 C:\Users\Bryan\Documents\MATLAB\data\2015-08-27\IRF
 C:\Users\Bryan\Documents\MATLAB\data\2015-08-27\wigs
 C:\Users\Bryan\Documents\MATLAB\data\2015-08-27\wigs
-C:\Users\Bryan\Documents\MATLAB\data\2015-08-27\tholand2_128x128_fixedpoint-midplane
+C:\Users\Bryan\Documents\MATLAB\data\2015-08-27\tholand2_128x128_sec3

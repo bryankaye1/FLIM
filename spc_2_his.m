@@ -33,19 +33,26 @@ for ts=1:tsm %ts and tsm is for combining multiple exposures into one image
 end
 
 if nargin > 6
-    pth_int = varargin{1};
-    fn_int = varargin{2};  
-    if length(fn_int)>3 %fixes filename if sdt is appended to file name
-        if strcmp(fn_int(end-3:end),'.sdt')
-            fn_int=fn_int(1:end-4);
+    if strcmp(varargin{1},'imout')
+        varargout{2} = sum(ld,1);
+    else
+        pth_int = varargin{1};
+        fn_int = varargin{2};
+        if length(fn_int)>3 %fixes filename if sdt is appended to file name
+            if strcmp(fn_int(end-3:end),'.sdt')
+                fn_int=fn_int(1:end-4);
+            end
         end
-    end    
-    fn_int = strcat(fn_int,'.sdt');
-    sdt = bh_readsetup([pth_int fn_int]); block=1; 
-    ch = bh_getdatablock(sdt,block); %raw lifetime data
-    imap1 = double(ch); %raw lifetime data in single form (normally stored as 4 bit number)   
-    imap1 = imap1(tmini:tmaxi,:,:);
-    imap = repmat(imap1,1,1,tsm);%repeats the map if there are mulitple cycles per image   
+        fn_int = strcat(fn_int,'.sdt');
+        sdt = bh_readsetup([pth_int fn_int]); block=1;
+        ch = bh_getdatablock(sdt,block); %raw lifetime data
+        imap1 = double(ch); %raw lifetime data in single form (normally stored as 4 bit number)
+        imap1 = imap1(tmini:tmaxi,:,:);
+        imap = repmat(imap1,1,1,tsm);%repeats the map if there are mulitple cycles per image
+        if strcmp(varargin{3},'imout')
+            varargout{2} = sum(ld,1);
+        end
+    end
 else
     imap1 = pi*ones(4096,128,128); %%If you disnt input int map, we use a pi map
     imap1 = imap1(tmini:tmaxi,:,:);

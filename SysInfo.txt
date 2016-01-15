@@ -1,4 +1,4 @@
-C:\Users\Bryan\Documents\MATLAB\data\2015-08-27\IRF
-C:\Users\Bryan\Documents\MATLAB\data\2015-08-27\wigs
-C:\Users\Bryan\Documents\MATLAB\data\2015-08-27\wigs
-C:\Users\Bryan\Documents\MATLAB\data\2015-08-27\tholand2_128x128_sec3
+C:\Users\Bryan\Documents\MATLAB\data\2015-4-2\irf
+C:\Users\Bryan\Documents\MATLAB\data\2015-4-2\wigs
+C:\Users\Bryan\Documents\MATLAB\data\2015-4-2\wigs
+C:\Users\Bryan\Documents\MATLAB\data\2015-4-2\atto565

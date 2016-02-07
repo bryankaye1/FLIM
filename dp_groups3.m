@@ -18,33 +18,33 @@ tfw = 0.5;
 tbac = 0.1;
 
 %% Set search parameters
-w1step = .02; w1min= .3; w1max = 1.5;%1.73  %1.6 used for extract 8/27 and 9/5 (actual 9/5 is 1.59) %1.5 used for taxol extract; %.8-2 1.05 %w1min must be an integer multiple of w1step.
+w1step = .02; w1min= 1.5; w1max = 1.5;%1.73  %1.6 used for extract 8/27 and 9/5 (actual 9/5 is 1.59) %1.5 used for taxol extract; %.8-2 1.05 %w1min must be an integer multiple of w1step.
 w2step = .02; w2min =  2; w2max = 4;%3.802%3.82/1.49   %3.8 used for 3/7/15 data %3.745 usd for 8/27 E %3.87 used for taxol extract; %3.81 was found for 8/25 b80 and 8/24 extract
 
 fracstep = 0.005; %.005 with w1/w2 set is 10sec per group
-prstep = fracstep; prmin=0; prmax = 0.4;
-w02step = fracstep; w02min = 0; w02max = 0.12;
+prstep = fracstep; prmin=0; prmax = 0;
+w02step = fracstep; w02min = 0; w02max = 1;
 thr = 0.01;
 
 for expt = 1:exptmax %determined by number of time series
-    dataname = 'm4_c20';
+    dataname = 'no_acc_no_ran_fov';
     dataname = dname(dataname,tseries, findw, expt, exptmax);
     for cindex = 1:cyclesmax %determined by number of w2 spots
         jind =0;
         while jind < jmax %j is determined by number of pixel groups
             jind = jind +1;
             %% Select files for IRF, wigs, IRF shift, wigs shift, and extract signal
-            sysinfo = 0; % Set to 1 if you want to force a rerun of make_irf_wig_ext
-            cpath = 'C:\Users\Bryan\Documents\MATLAB\data\2015-4-2\';
+            sysinfo = 1; % Set to 1 if you want to force a rerun of make_irf_wig_ext
+            cpath = 'C:\Users\Bryan\Documents\MATLAB\data\2016-02-03\';
             pth_irf = cpath; %file path IRF
             pth_data = cpath; %file path data
-            pth_wigs = 'C:\Users\Bryan\Documents\MATLAB\data\2015-4-2\'; %file path wiggles
+            pth_wigs = 'C:\Users\Bryan\Documents\MATLAB\data\2016-02-03\'; %file path wiggles
             pth_ext = cpath; %ignore this
             pth_data_for_shift = cpath;
             
             %dataname = strcat('tholand2_128x128_sec',num2str(k));
-            irfname = 'irf';
-            data_shift_name = 'atto565';%'tholand1_128x128_sec3'; %The IRF can be a little offset (in time) from the data, this data is used to align/find the offset and shift the data
+            irfname = 'IRF';
+            data_shift_name = 'no_acc_no_ran_fov1';%'tholand1_128x128_sec3'; %The IRF can be a little offset (in time) from the data, this data is used to align/find the offset and shift the data
             wigsname = 'wigs';
             extname = 'wigs'; %IGRNORE THIS
             
@@ -67,8 +67,8 @@ for expt = 1:exptmax %determined by number of time series
             %% Load in IRF, wigs
             tempf=load(strcat(pth_irf,'current.mat'),'-mat','bneed',...
                 'pulsewb', 'irf', 'irfsim', 'irf_pdf', 'tmini', 'tmaxi', 'ext','irfname','wigsb','gab');
-            brem = tempf(1).bneed;   %Number of bins to remove from the 12.5ns to match BH data
-            bins = tempf(1).pulsewb; %Number of bins that make up 12.5ns
+            brem = tempf(1).bneed;   %Number of bins to remove from the 12.58ns to match BH data
+            bins = tempf(1).pulsewb; %Number of bins that make up 12.58ns
             tmini = tempf(1).tmini;
             tmaxi = tempf(1).tmaxi;
             ext = tempf(1).ext;

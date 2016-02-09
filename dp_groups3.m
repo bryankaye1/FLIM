@@ -3,7 +3,7 @@
 %pr means FRET fraction now
 
 tsm=1; %%This is for concatanating multiple images into one large image. tsm < 100;
-tseries = 0; findw = 1;
+tseries = 0; findw = 3;
 ngr = 1;%jind*100000;
 jmax = 1;
 cyclesmax = 1;
@@ -14,7 +14,7 @@ else
 end
 [input] = ini_input(cyclesmax,exptmax,jmax); %Initialize input structure
 comment = 'comment here';
-tfw = 0.5;
+tfw = 0.3;
 tbac = 0.1;
 
 %% Set search parameters
@@ -27,7 +27,7 @@ w02step = fracstep; w02min = 0; w02max = 1;
 thr = 0.01;
 
 for expt = 1:exptmax %determined by number of time series
-    dataname = 'no_acc_no_ran_fov';
+    dataname = 'no_acc_fov';
     dataname = dname(dataname,tseries, findw, expt, exptmax);
     for cindex = 1:cyclesmax %determined by number of w2 spots
         jind =0;
@@ -44,7 +44,7 @@ for expt = 1:exptmax %determined by number of time series
             
             %dataname = strcat('tholand2_128x128_sec',num2str(k));
             irfname = 'IRF';
-            data_shift_name = 'no_acc_no_ran_fov1';%'tholand1_128x128_sec3'; %The IRF can be a little offset (in time) from the data, this data is used to align/find the offset and shift the data
+            data_shift_name = dataname;%'tholand1_128x128_sec3'; %The IRF can be a little offset (in time) from the data, this data is used to align/find the offset and shift the data
             wigsname = 'wigs';
             extname = 'wigs'; %IGRNORE THIS
             
@@ -56,7 +56,7 @@ for expt = 1:exptmax %determined by number of time series
             
             if isequal(new_filenames,old_filenames) && sysinfo == 0;
             else
-                [~, ~, ~, ~, ~, ~, ~, ~, ~] = make_irf_wig_ext(pth_irf, irfname, pth_wigs,...
+                [~, ~, ~, ~, ~, ~, ~] = make_irf_wig_ext_temp(pth_irf, irfname, pth_wigs,...
                     wigsname, pth_ext, extname, data_shift_name, pth_data_for_shift);
                 fileID = fopen('SysInfo.txt','w');
                 fprintf(fileID,'%s%s\n%s%s\n%s%s\n%s%s\n',pth_irf, irfname, pth_wigs, wigsname, pth_ext,extname, pth_data_for_shift, data_shift_name);
@@ -66,7 +66,7 @@ for expt = 1:exptmax %determined by number of time series
             
             %% Load in IRF, wigs
             tempf=load(strcat(pth_irf,'current.mat'),'-mat','bneed',...
-                'pulsewb', 'irf', 'irfsim', 'irf_pdf', 'tmini', 'tmaxi', 'ext','irfname','wigsb','gab');
+                'pulsewb', 'tmini', 'tmaxi', 'ext','irfname','wigsb','gab');
             brem = tempf(1).bneed;   %Number of bins to remove from the 12.58ns to match BH data
             bins = tempf(1).pulsewb; %Number of bins that make up 12.58ns
             tmini = tempf(1).tmini;

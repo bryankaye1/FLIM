@@ -1,11 +1,10 @@
-function [bneed, pulsewb, irf, irfsim, irf_pdf, wig, tmini, tmaxi, ext] =...
-    make_irf_wig_ext(pth_irf, irfname, pth_wigs, wigsname, pth_ext,...
+function [bneed, pulsewb, irf, wig, tmini, tmaxi, ext] =...
+    make_irf_wig_ext_temp(pth_irf, irfname, pth_wigs, wigsname, pth_ext,...
     extname, data_shift_name, pth_data_for_shift)
 %This file is used to make the IRF vector, wiggles vector, extract vector. It also calculates the
 %amount of missing time. It also makes the IRF_pdf (which is used for
 %simulating data).
-
-%Make sure the first 25 bins are a good representation of the noise for the IRF
+%Make sure the first 1% of signal is a good representation of the noise for the IRF
 
 %irf_pdf removed
 TOTALbins = 4096; %total number of bins
@@ -50,13 +49,94 @@ irf2 = irf2-mean(irf2(1:round(length(irf2)/100))); %calculates the background no
 irf2(irf2<0) =0; %Set all negative values to 0
 %irf2(1500:end)=0; %This line removes irf past a certain time to remove false reflections etc
 irf = irf2./wig2; % Divide out wiggles
-irfsim = floor(irf); %irfsim needs integer numbers to build pdf
+
+%% IRF and Wig shift
+% [data1,~,~] = spc_2_his(tmini,tmaxi,data_shift_name,pth_data_for_shift,1,1);
+% data_smooth = smooth(data1,7)'; %smooth data
+% data_scaled = length(data_smooth)*data_smooth/max(data_smooth);
+% irf_smooth = smooth(irf,7)'; %smoth irf
+% irf_scaled = length(irf_smooth)*irf_smooth/max(irf_smooth);
+% % data_diff = diff(data_scaled);
+% % irf_diff = diff(irf_scaled);
+% % ibeg = find(data_diff>1,'first');
+% % ibegirf = find(irf_diff>1,'first');
+% 
+% %%%Calculate where data begins and ends
+% datadiff = diff(data_scaled); %Normalize Data
+% threshold = 0;  %for example
+% aboveThreshold = (datadiff > threshold);  %where above threshold
+% %aboveThreshold is a logical array, where 1 when above threshold, 0, below.
+% %we thus want to calculate the difference between rising and falling edges
+% aboveThreshold = [false, aboveThreshold, false];  %pad with 0's at ends
+% edges = diff(aboveThreshold);
+% rising = find(edges==1);     %rising/falling edges
+% falling = find(edges==-1);  
+% spanWidth = falling - rising;  %width of span of 1's (above threshold)
+% wideEnough = spanWidth >= 10;   
+% ibeg = rising(wideEnough);    %start of each span
+% iend = falling(wideEnough)-1;   %end of each span
+% 
+% %%%Calculate where IRF ends
+% irfdiff = diff(irf_scaled); %Normalize Data
+% threshold = .5;  %for example
+% aboveThreshold = (irfdiff > threshold);  %where above threshold
+% %aboveThreshold is a logical array, where 1 when above threshold, 0, below.
+% %we thus want to calculate the difference between rising and falling edges
+% aboveThreshold = [false, aboveThreshold, false];  %pad with 0's at ends
+% edges = diff(aboveThreshold);
+% rising = find(edges==1);     %rising/falling edges
+% falling = find(edges==-1);  
+% spanWidth = falling - rising;  %width of span of 1's (above threshold)
+% wideEnough = spanWidth >= 10;   
+% ibegirf = rising(wideEnough);    %start of each span
+% iendirf = falling(wideEnough)-1;   %end of each span
+% 
+% %shift1 = ibeg-ibegirf; %How far data is shifted relative to IRF: using begining as metric
+% %shift2 = iend-iendirf; %How far data is shifted relative to IRF: using end as metric
+% %shiftb = round((shift1+0.2*shift2)/1.2); %How far data is shifted relative to IRF: Weighted metric
+% shiftb = ibeg(1)-ibegirf(1);
+% irfb = circshift(irf/max(irf),[shiftb,0]);
+gab = irf/max(irf);
+
+%% Plots & irf
+
+%fprintf('shift %3.4f \n', shiftb);
+%figure(12); clf; plot((data1/max(data1)),'b'); hold on; plot((irfb), 'r'); title('Normalized: Data (blue) & after shift IRF (RED)');
+%drawnow;
+%figure(13); clf; plot(data1/max(data1),'b'); hold on; plot(irf/max(irf), 'r'); title('Normalized: Data (blue) & before shift IRF (RED)');
+%drawnow;
+pulsewb = bins;
+wigsb = wig';
+ext = wig';
+save(strcat(pth_irf,'current.mat'), 'bneed', 'pulsewb', 'irf', 'tmini', 'tmaxi', 'ext','irfname','wigsb','gab');
+
+end
+% 
+% %% IRF and Wig shift
+% [data1,~,~] = spc_2_his(tmini,tmaxi,data_shift_name,pth_data_for_shift,1,1);
+% data1 = data1-min(data1); %subtract out background from data
+% irf = irf - min(irf); %subtract out background from IRF
+% %%%Calculate where data begins and ends
+% data = data1/max(data1); %Normalize Data
+% ibeg = find(data>.03,1,'first');%where data initial increase "begins"
+% iend = find(data>.06,1,'first');%where data initial increase "ends"
+% %%%Calculate where IRF ends
+% irf3 = irf/max(irf);
+% ibegirf = find(irf3>.03,1,'first');%where IRF initial increase "begins"
+% iendirf = find(irf3>.06,1,'first');%where IRF initial increase "end"
+% 
+% shift1 = ibeg-ibegirf; %How far data is shifted relative to IRF: using begining as metric
+% shift2 = iend-iendirf; %How far data is shifted relative to IRF: using end as metric
+% shiftb = round((shift1+0.2*shift2)/1.2); %How far data is shifted relative to IRF: Weighted metric
+% irfb = circshift(irf3,[shiftb,0]);
+% gab = irfb;
+
 
 
 %% irf_pdf
+%irfsim = floor(irf); %irfsim needs integer numbers to build pdf
 %[irf_pdf] = pdf_builder(Tlaser, irfsim);
-irf_pdf = 0;
-
+%irf_pdf = 0;
 %% ext
 %%%This section reads in the background extract signal, divides it out by
 %%%the wiggles, then does a running average to smooth out poisson noise.
@@ -74,38 +154,3 @@ irf_pdf = 0;
 %ext(ext<0) =0; %Set all negative values to 0
 %ext = ext/sum(ext); %Normalize extract pdf
 %ext1 = 1;
-
-
-%% IRF and Wig shift
-[data1,~,~] = spc_2_his(tmini,tmaxi,data_shift_name,pth_data_for_shift,1,1);
-data1 = data1-mean(data1(1:10));
-irf = irf - mean(irf(1:10));
-
-data = data1/max(data1);
-ibeg = find(data>.03,1,'first');
-iend = find(data>.06,1,'first');
-
-irf3 = irf/max(irf);
-ibegirf = find(irf3>.03,1,'first');
-iendirf = find(irf3>.06,1,'first');
-
-shift1 = ibeg-ibegirf;
-shift2 = iend-iendirf;
-shiftb = round((shift1+0.2*shift2)/1.2);
-irfb = circshift(irf3,[shiftb,0]);
-gab = circshift(irf,[shiftb,0]);
-
-%% Plots & irf
-
-fprintf('shift %3.4f \n', shiftb);
-%figure(13); clf; plot((data1),'b'); hold on; plot((gab), 'r'); title('Data (blue) & shifted IRF (RED)');
-%figure(11); clf; plot(data(ibeg:iend),'b'); hold on; plot(irf3(ibeg:iend), 'r'); title('IRF and Data Sections');
-figure(12); clf; plot((data),'b'); hold on; plot((irfb), 'r'); title('Normalized: Data (blue) & after shift IRF (RED)');
-figure(13); clf; plot((data),'b'); hold on; plot(irf/max(irf), 'r'); title('Normalized: Data (blue) & before shift IRF (RED)');
-
-pulsewb = bins;
-wigsb = wig';
-ext = wig';
-save(strcat(pth_irf,'current.mat'), 'bneed', 'pulsewb', 'irf', 'irfsim', 'irf_pdf', 'tmini', 'tmaxi', 'ext','irfname','wigsb','gab');
-
-end

@@ -3,38 +3,38 @@
 %pr means FRET fraction now
 
 tsm=1; %%This is for concatanating multiple images into one large image. tsm < 100;
-tseries = 0; findw = 3;
+tseries = 0; add_num_2_dataname = 5;
 ngr = 1;%jind*100000;
 jmax = 1;
 cyclesmax = 1;
-if findw > tseries
-    exptmax = findw;
+if add_num_2_dataname > tseries
+    exptmax = add_num_2_dataname;
 else
     exptmax = tseries;
 end
 [input] = ini_input(cyclesmax,exptmax,jmax); %Initialize input structure
 comment = 'comment here';
-tfw = 0.3;
-tbac = 0.1;
+tfw = 0.5;
+tbac = 0.2;
 
 %% Set search parameters
-w1step = .02; w1min= 1.5; w1max = 1.5;%1.73  %1.6 used for extract 8/27 and 9/5 (actual 9/5 is 1.59) %1.5 used for taxol extract; %.8-2 1.05 %w1min must be an integer multiple of w1step.
-w2step = .02; w2min =  2; w2max = 4;%3.802%3.82/1.49   %3.8 used for 3/7/15 data %3.745 usd for 8/27 E %3.87 used for taxol extract; %3.81 was found for 8/25 b80 and 8/24 extract
+w1step = .01; w1min= 0.7; w1max = 0.7;%1.73  %1.6 used for extract 8/27 and 9/5 (actual 9/5 is 1.59) %1.5 used for taxol extract; %.8-2 1.05 %w1min must be an integer multiple of w1step.
+w2step = .02; w2min =  3.62; w2max = 3.62;%3.802%3.82/1.49   %3.8 used for 3/7/15 data %3.745 usd for 8/27 E %3.87 used for taxol extract; %3.81 was found for 8/25 b80 and 8/24 extract
 
 fracstep = 0.005; %.005 with w1/w2 set is 10sec per group
-prstep = fracstep; prmin=0; prmax = 0;
+prstep = fracstep; prmin=0; prmax = 1;
 w02step = fracstep; w02min = 0; w02max = 1;
 thr = 0.01;
 
 for expt = 1:exptmax %determined by number of time series
-    dataname = 'no_acc_fov';
-    dataname = dname(dataname,tseries, findw, expt, exptmax);
+    dataname = 'UF_fov';
+    dataname = dname(dataname,tseries, add_num_2_dataname, expt, exptmax);
     for cindex = 1:cyclesmax %determined by number of w2 spots
         jind =0;
         while jind < jmax %j is determined by number of pixel groups
             jind = jind +1;
             %% Select files for IRF, wigs, IRF shift, wigs shift, and extract signal
-            sysinfo = 1; % Set to 1 if you want to force a rerun of make_irf_wig_ext
+            sysinfo = 0; % Set to 1 if you want to force a rerun of make_irf_wig_ext
             cpath = 'C:\Users\Bryan\Documents\MATLAB\data\2016-02-03\';
             pth_irf = cpath; %file path IRF
             pth_data = cpath; %file path data
@@ -44,7 +44,7 @@ for expt = 1:exptmax %determined by number of time series
             
             %dataname = strcat('tholand2_128x128_sec',num2str(k));
             irfname = 'IRF';
-            data_shift_name = dataname;%'tholand1_128x128_sec3'; %The IRF can be a little offset (in time) from the data, this data is used to align/find the offset and shift the data
+            data_shift_name = 'no_acc_no_ran_fov1';%'tholand1_128x128_sec3'; %The IRF can be a little offset (in time) from the data, this data is used to align/find the offset and shift the data
             wigsname = 'wigs';
             extname = 'wigs'; %IGRNORE THIS
             
@@ -56,7 +56,7 @@ for expt = 1:exptmax %determined by number of time series
             
             if isequal(new_filenames,old_filenames) && sysinfo == 0;
             else
-                [~, ~, ~, ~, ~, ~, ~] = make_irf_wig_ext_temp(pth_irf, irfname, pth_wigs,...
+                [~, ~, ~, ~, ~, ~, ~] = make_irf_wig_ext(pth_irf, irfname, pth_wigs,...
                     wigsname, pth_ext, extname, data_shift_name, pth_data_for_shift);
                 fileID = fopen('SysInfo.txt','w');
                 fprintf(fileID,'%s%s\n%s%s\n%s%s\n%s%s\n',pth_irf, irfname, pth_wigs, wigsname, pth_ext,extname, pth_data_for_shift, data_shift_name);
@@ -130,8 +130,8 @@ for expt = 1:exptmax %determined by number of time series
         end
     end
 end
-%[MatName,SimName] = write_to_mlist; fprintf('DN = %s FN = %s\n',dataname,MatName);
-%save(MatName, 'input');
+[MatName,SimName] = write_to_mlist; fprintf('DN = %s FN = %s\n',dataname,MatName);
+save(MatName, 'input');
 
 
 

@@ -1,10 +1,11 @@
 function [bneed, pulsewb, irf, wig, tmini, tmaxi, ext] =...
-    make_irf_wig_ext_temp(pth_irf, irfname, pth_wigs, wigsname, pth_ext,...
+    make_irf_wig_ext(pth_irf, irfname, pth_wigs, wigsname, pth_ext,...
     extname, data_shift_name, pth_data_for_shift)
 %This file is used to make the IRF vector, wiggles vector, extract vector. It also calculates the
 %amount of missing time. It also makes the IRF_pdf (which is used for
 %simulating data).
-%Make sure the first 1% of signal is a good representation of the noise for the IRF
+%Make sure the first 1% of signal is a good representation of the noise for
+%the IRF.
 
 %irf_pdf removed
 TOTALbins = 4096; %total number of bins

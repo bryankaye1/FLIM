@@ -1,9 +1,18 @@
-pr = .2;
-w02 = .95;
-w1 = .5;
-w2 = 3.8;
-nps = 5000000;
 
-[w00out, w01out, w02out, npho, dt] = SimData_v1(pr, w02, w1, w2, nps);
+jmax = 10;
+base_filename = 'm5';
+for j = 1:jmax
+    pth_data{j} = 'C:\Users\Bryan\Documents\MATLAB\data\2015-4-2\';
+    
+    if jmax < 10
+        dataname{j} = strcat(base_filename,'_c',num2str(j));
+    else
+        if j < 10
+            dataname{j} = strcat(base_filename,'_c0',num2str(j));
+        else
+            dataname{j} = strcat(base_filename,'_c',num2str(j));
+        end
+    end
+end
 
-figure(1); plot(dt);
+[~] = sdt2image(pth_data, dataname);

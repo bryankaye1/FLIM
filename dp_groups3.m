@@ -2,137 +2,220 @@
 %Here we prepare the data and set the analysis parameters
 %pr means FRET fraction now
 
+
+%tsm: if set to >1, appends '_cX' to file name, where X is value of tsm.
+%ngr = divides FLIM data into ngr pixel groups. Ignored if 'FLIMage' is set.
+%num_int_bins: Set this to the number intenisty bins you want for binning
+%pixels (via binning by intensity) into SUPER PIXELS
+%combine_exposures_FLIMage: number of FLIM data sets (exposures) you want
+%to combine into one FLIM data.
+
+
 tsm=1; %%This is for concatanating multiple images into one large image. tsm < 100;
-tseries = 0; add_num_2_dataname = 5;
+num_int_bins = 0;
+combine_exposures_FLIMage = 10; %Use for
 ngr = 1;%jind*100000;
+split_matin = 256; %Set to 1 to "split" set into one group, set to >1 for number of matins you want
+
 jmax = 1;
 cyclesmax = 1;
-if add_num_2_dataname > tseries
-    exptmax = add_num_2_dataname;
-else
-    exptmax = tseries;
-end
+tseries = 0; %add_num_2_dataname = 'n;
+% if add_num_2_dataname > tseries
+%     exptmax = add_num_2_dataname;
+% else
+%     exptmax = tseries;
+% end
+exptmax= 1;
 [input] = ini_input(cyclesmax,exptmax,jmax); %Initialize input structure
-comment = 'comment here';
-tfw = 0.5;
+comment = 'FLIMage - no intensity correction';
+tfw = 0.6;
 tbac = 0.2;
 
 %% Set search parameters
-w1step = .01; w1min= 0.7; w1max = 0.7;%1.73  %1.6 used for extract 8/27 and 9/5 (actual 9/5 is 1.59) %1.5 used for taxol extract; %.8-2 1.05 %w1min must be an integer multiple of w1step.
-w2step = .02; w2min =  3.62; w2max = 3.62;%3.802%3.82/1.49   %3.8 used for 3/7/15 data %3.745 usd for 8/27 E %3.87 used for taxol extract; %3.81 was found for 8/25 b80 and 8/24 extract
+w1step = .01; w1min= 1.73; w1max = 1.73;%1.064-2016/2/27  --- %1.73  %1.6 used for extract 8/27 and 9/5 (actual 9/5 is 1.59) %1.5 used for taxol extract; %.8-2 1.05 %w1min must be an integer multiple of w1step.
+w2step = .02; w2min =  3.802; w2max = 3.802;%3.802%3.82/1.49   %3.8 used for 3/7/15 data %3.745 usd for 8/27 E %3.87 used for taxol extract; %3.81 was found for 8/25 b80 and 8/24 extract
 
-fracstep = 0.005; %.005 with w1/w2 set is 10sec per group
+fracstep = 0.002; %.005 with w1/w2 set is 10sec per group
 prstep = fracstep; prmin=0; prmax = 1;
 w02step = fracstep; w02min = 0; w02max = 1;
 thr = 0.01;
 
-for expt = 1:exptmax %determined by number of time series
-    dataname = 'UF_fov';
-    dataname = dname(dataname,tseries, add_num_2_dataname, expt, exptmax);
+for expt = 1:exptmax %determined by number of time series  
+    %dataname = dname(dataname,tseries, add_num_2_dataname, expt, exptmax);
     for cindex = 1:cyclesmax %determined by number of w2 spots
+        dataname = 'm5';     
+        %% Select files for IRF, wigs, IRF shift, wigs shift, and extract signal
+       
+        cpath = 'C:\Users\Bryan\Documents\MATLAB\data\2015-4-2\';
+        pth_irf = cpath; %file path IRF
+        pth_data = cpath; %file path data
+        pth_wigs = 'C:\Users\Bryan\Documents\MATLAB\data\2015-4-2\'; %file path wiggles
+        pth_ext = cpath; %ignore this
+        pth_data_for_shift = cpath;      
+        irfname = 'irf';
+        data_shift_name = 'donor-only';%'tholand1_128x128_sec3'; %The IRF can be a little offset (in time) from the data, this data is used to align/find the offset and shift the data
+        wigsname = 'wigs';
+        extname = 'wigs'; %IGRNORE THIS
+        
+        %%   Make IRF, wigs, irf shift     
+        sysinfo = 0; % Set to 1 if you want to force a rerun of make_irf_wig_ext
+        cppout = fopen('SysInfo.txt');
+        [old_filenames, count] = fscanf(cppout, '%s');
+        new_filenames = [pth_irf, irfname, pth_wigs, wigsname, pth_ext,extname, pth_data_for_shift, data_shift_name];
+        fclose(cppout);              
+        if isequal(new_filenames,old_filenames) && sysinfo == 0;
+        else
+            [~, ~, ~, ~, ~, ~, ~] = make_irf_wig_ext_minres(pth_irf, irfname, pth_wigs,...
+                wigsname, pth_ext, extname, data_shift_name, pth_data_for_shift);
+            fileID = fopen('SysInfo.txt','w');
+            fprintf(fileID,'%s%s\n%s%s\n%s%s\n%s%s\n',pth_irf, irfname, pth_wigs, wigsname, pth_ext,extname, pth_data_for_shift, data_shift_name);
+            fclose(fileID);
+        end       
+        %% Load in IRF, wigs
+        tempf=load(strcat(pth_irf,'current.mat'),'-mat','bneed',...
+            'pulsewb', 'tmini', 'tmaxi', 'ext','irfname','wigsb','gab');
+        brem = tempf(1).bneed;   %Number of bins to remove from the 12.58ns to match BH data
+        bins = tempf(1).pulsewb; %Number of bins that make up 12.58ns
+        tmini = tempf(1).tmini;
+        tmaxi = tempf(1).tmaxi;
+        ext = tempf(1).ext;
+        wig = tempf(1).wigsb;
+        ga = tempf(1).gab; %ga is IRF after shift
+        binskeep = bins-brem;
         jind =0;
+        
         while jind < jmax %j is determined by number of pixel groups
             jind = jind +1;
-            %% Select files for IRF, wigs, IRF shift, wigs shift, and extract signal
-            sysinfo = 0; % Set to 1 if you want to force a rerun of make_irf_wig_ext
-            cpath = 'C:\Users\Bryan\Documents\MATLAB\data\2016-02-03\';
-            pth_irf = cpath; %file path IRF
-            pth_data = cpath; %file path data
-            pth_wigs = 'C:\Users\Bryan\Documents\MATLAB\data\2016-02-03\'; %file path wiggles
-            pth_ext = cpath; %ignore this
-            pth_data_for_shift = cpath;
+            %% This section is where data is saved
+            %This sub-section saved FLIMages and all pixel groups.
+            if jind ==1 && combine_exposures_FLIMage > 0
+                for k = 1: combine_exposures_FLIMage
+                    dataname2 = strcat(dataname,'_c',num2str(k+10)); %make general when cleaning up this code
+                    if k==1
+                        [combined_FLIMage,jmax,ni] = spc_2_his(tmini,tmaxi,dataname2,pth_data,ngr,tsm,'FLIMage',cpath,'atto565');
+                    else
+                        [pmat,jmax,ni] = spc_2_his(tmini,tmaxi,dataname2,pth_data,ngr,tsm,'FLIMage',cpath,'atto565');
+                        combined_FLIMage = combined_FLIMage + pmat;
+                    end
+                end
+                pmat = combined_FLIMage;
+            elseif jind == 1
+                [pmat,jmax,ni] = spc_2_his(tmini,tmaxi,dataname,pth_data,ngr,tsm,cpath,'atto4x');%pth_irf,'atto2x','imout');
+            end
+            p = pmat(jind,:);
             
-            %dataname = strcat('tholand2_128x128_sec',num2str(k));
-            irfname = 'IRF';
-            data_shift_name = 'no_acc_no_ran_fov1';%'tholand1_128x128_sec3'; %The IRF can be a little offset (in time) from the data, this data is used to align/find the offset and shift the data
-            wigsname = 'wigs';
-            extname = 'wigs'; %IGRNORE THIS
+            %This sub-section combines pixel groups from with similar intensities into SUPER PIXELS
+            %Number of photons per super pixel is saved in nph_counts. The nph_counts
+            %field in the input file only exists when this section is run
             
-            %%   Make IRF, wigs, irf shift
-            cppout = fopen('SysInfo.txt');
-            [old_filenames, count] = fscanf(cppout, '%s');
-            new_filenames = [pth_irf, irfname, pth_wigs, wigsname, pth_ext,extname, pth_data_for_shift, data_shift_name];
-            fclose(cppout);
-            
-            if isequal(new_filenames,old_filenames) && sysinfo == 0;
-            else
-                [~, ~, ~, ~, ~, ~, ~] = make_irf_wig_ext(pth_irf, irfname, pth_wigs,...
-                    wigsname, pth_ext, extname, data_shift_name, pth_data_for_shift);
-                fileID = fopen('SysInfo.txt','w');
-                fprintf(fileID,'%s%s\n%s%s\n%s%s\n%s%s\n',pth_irf, irfname, pth_wigs, wigsname, pth_ext,extname, pth_data_for_shift, data_shift_name);
-                fclose(fileID);
-                %fprintf('%s', data_shift_name);
+            %Average number of photons per pixel in the super pixel is saved under nph_mean->ni.
+            if jind==1 && num_int_bins>0
+                intbin = min(ni)+(0:num_int_bins)*(max(ni)-min(ni))/num_int_bins;
+                nph_mean = [];
+                dataout = [];
+                nph_counts = [];
+                for k = 1:num_int_bins
+                    nph = 0;
+                    datag = 0;
+                    count =0;
+                    for l = 1:length(ni)
+                        if intbin(k) < ni(l) && intbin(k+1)> ni(l)
+                            count = count  +1;
+                            nph = ni(l)+nph;
+                            datag = pmat(l,:)+datag;
+                        end
+                    end
+                    if count > 0
+                        nph_mean =[nph_mean nph/count];
+                        dataout = [dataout;datag];
+                        nph_counts = [nph_counts count];
+                    end
+                end
+                jmax = length(nph_mean);
             end
             
-            %% Load in IRF, wigs
-            tempf=load(strcat(pth_irf,'current.mat'),'-mat','bneed',...
-                'pulsewb', 'tmini', 'tmaxi', 'ext','irfname','wigsb','gab');
-            brem = tempf(1).bneed;   %Number of bins to remove from the 12.58ns to match BH data
-            bins = tempf(1).pulsewb; %Number of bins that make up 12.58ns
-            tmini = tempf(1).tmini;
-            tmaxi = tempf(1).tmaxi;
-            ext = tempf(1).ext;
-            wig = tempf(1).wigsb;
-            ga = tempf(1).gab; %ga is IRF after shift
-            binskeep = bins-brem;
-            
-            %% Set J dependence on how data is analyzed
-            if jind == 1
-                [pmat,jmax,ni,sinti,imagedata] = spc_2_his(tmini,tmaxi,dataname,pth_data,1,1,'imout');
-                p = pmat(jind,:);
-            else
-                p = pmat(jind,:);
+            if num_int_bins>0
+                p = dataout(jind,:);
+                ni = nph_mean;
+                input(cindex,expt,jind).nph_counts = nph_counts;
             end
             
             %% Save the info into the input file %%
-            
-            input(cindex,expt,jind).jmax = jmax;
-            input(cindex,expt,jind).exptmax = exptmax;
-            input(cindex,expt,jind).cyclesmax = cyclesmax;
-            
-            input(cindex,expt,jind).datahis = p;
-            input(cindex,expt,jind).ga = ga; %ga is name of vector of shifted irf
-            
-            input(cindex,expt,jind).w1step = w1step; input(cindex,expt,jind).w1min = w1min; input(cindex,expt,jind).w1max = w1max;
-            input(cindex,expt,jind).w2step = w2step; input(cindex,expt,jind).w2min = w2min; input(cindex,expt,jind).w2max = w2max;
-            input(cindex,expt,jind).prstep = prstep; input(cindex,expt,jind).prmin = prmin; input(cindex,expt,jind).prmax = prmax;
-            input(cindex,expt,jind).w02step = w02step; input(cindex,expt,jind).w02min = w02min; input(cindex,expt,jind).w02max = w02max;
-            input(cindex,expt,jind).extstep = fracstep; input(cindex,expt,jind).extmin = 0; input(cindex,expt,jind).extmax = 0;
-            input(cindex,expt,jind).fracstep = fracstep;
-            
-            input(cindex,expt,jind).dataname = dataname;
-            input(cindex,expt,jind).pth_data = pth_data;
-            input(cindex,expt,jind).irf_name= irfname;
-            input(cindex,expt,jind).pth_irf = pth_irf;
-            
-            input(cindex,expt,jind).data_shift_name = data_shift_name;
-            input(cindex,expt,jind).pth_data_for_shift = pth_data_for_shift;
-            input(cindex,expt,jind).ngr = ngr;
-            input(cindex,expt,jind).ni = ni;
-            input(cindex,expt,jind).sinti = sinti;
-            
-            input(cindex,expt,jind).thr = thr;
-            input(cindex,expt,jind).brem = brem;
-            input(cindex,expt,jind).bins= bins;
-            input(cindex,expt,jind).tmini = tmini;
-            input(cindex,expt,jind).tmaxi = tmaxi;
-            input(cindex,expt,jind).ext= ext;
-            input(cindex,expt,jind).wig = wig;
-            
-            input(cindex,expt,jind).pth_wigs = pth_wigs;
-            input(cindex,expt,jind).wigsname = wigsname;
-            input(cindex,expt,jind).pth_ext = pth_ext;
-            input(cindex,expt,jind).extname = extname;
-            input(cindex,expt,jind).comment = comment;
-            input(cindex,expt,jind).tbac = tbac;
-            input(cindex,expt,jind).tfw = tfw;
-            input(cindex,expt,jind).analyze = 1;
+            for save_input_mat = 1:1
+                input(cindex,expt,jind).jmax = jmax/split_matin;
+                input(cindex,expt,jind).exptmax = exptmax;
+                input(cindex,expt,jind).cyclesmax = cyclesmax;
+                
+                input(cindex,expt,jind).datahis = p;
+                input(cindex,expt,jind).ga = ga; %ga is name of vector of shifted irf
+                
+                input(cindex,expt,jind).w1step = w1step; input(cindex,expt,jind).w1min = w1min; input(cindex,expt,jind).w1max = w1max;
+                input(cindex,expt,jind).w2step = w2step; input(cindex,expt,jind).w2min = w2min; input(cindex,expt,jind).w2max = w2max;
+                input(cindex,expt,jind).prstep = prstep; input(cindex,expt,jind).prmin = prmin; input(cindex,expt,jind).prmax = prmax;
+                input(cindex,expt,jind).w02step = w02step; input(cindex,expt,jind).w02min = w02min; input(cindex,expt,jind).w02max = w02max;
+                input(cindex,expt,jind).extstep = fracstep; input(cindex,expt,jind).extmin = 0; input(cindex,expt,jind).extmax = 0;
+                input(cindex,expt,jind).fracstep = fracstep;
+                
+                input(cindex,expt,jind).dataname = dataname;
+                input(cindex,expt,jind).pth_data = pth_data;
+                input(cindex,expt,jind).irf_name= irfname;
+                input(cindex,expt,jind).pth_irf = pth_irf;
+                
+                input(cindex,expt,jind).data_shift_name = data_shift_name;
+                input(cindex,expt,jind).pth_data_for_shift = pth_data_for_shift;
+                input(cindex,expt,jind).ngr = ngr;
+                input(cindex,expt,jind).ni = ni;
+                
+                input(cindex,expt,jind).thr = thr;
+                input(cindex,expt,jind).brem = brem;
+                input(cindex,expt,jind).bins= bins;
+                input(cindex,expt,jind).tmini = tmini;
+                input(cindex,expt,jind).tmaxi = tmaxi;
+                input(cindex,expt,jind).ext= ext;
+                input(cindex,expt,jind).wig = wig;
+                
+                input(cindex,expt,jind).pth_wigs = pth_wigs;
+                input(cindex,expt,jind).wigsname = wigsname;
+                input(cindex,expt,jind).pth_ext = pth_ext;
+                input(cindex,expt,jind).extname = extname;
+                input(cindex,expt,jind).comment = comment;
+                input(cindex,expt,jind).tbac = tbac;
+                input(cindex,expt,jind).tfw = tfw;
+                input(cindex,expt,jind).split_matin = split_matin;
+            end
         end
     end
 end
-[MatName,SimName] = write_to_mlist; fprintf('DN = %s FN = %s\n',dataname,MatName);
-save(MatName, 'input');
+%%
+if split_matin <2
+    [MatName,SimName] = write_to_mlist; fprintf('DN = %s FN = %s\n',dataname,MatName);
+    %fprintf('w1 is %1.2f\n',w1min);
+    fileID = fopen('matin_prints.txt','w');
+    fprintf(fileID,'DN = %s FN = %s\n',dataname,MatName);
+    fclose(fileID);
+    save(MatName, 'input');
+else
+    input_holdon = input;
 
+    for k = 1:split_matin
+        pstart = 1+(k-1)*(jmax/split_matin);
+        pend = k*(jmax/split_matin);
+        input = input_holdon(1,1,pstart:pend);
+        [MatName,SimName] = write_to_mlist;
+        if k==1
+            fprintf('DN = %s FLIMage: Matin %3.0f-%3.0f\n',dataname,...
+                str2num(MatName(end-7:end-4)),str2num(MatName(end-7:end-4))+split_matin-1);
+            fileID = fopen('matin_prints.txt','w');
+            fprintf(fileID,'DN = %s FLIMage: Matin %3.0f-%3.0f\n',dataname,...
+                str2num(MatName(end-7:end-4)),str2num(MatName(end-7:end-4))+split_matin-1);
+            fclose(fileID);
+        end
+        %fprintf('w1 is %1.2f\n',w1min);
+        save(MatName, 'input');
+    end
+    
+    
+end
 
 
 

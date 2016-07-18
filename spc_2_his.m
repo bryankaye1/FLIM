@@ -9,8 +9,13 @@ function [data,jmax, nphi,varargout] = spc_2_his(tmini,tmaxi,file_name,pth_sdt,n
 
 
 %FOV intensity correction,
-%Vargargin(1) = FOV intensity map file path
-%Vargargin(2) = FOV intensity map file name
+%Varargin(1) = FOV intensity map file path
+%Varargin(2) = FOV intensity map file name
+
+%If you want FLIMage that is intensity-map adjusted (for super pixels etc)
+%Varargin(1) = 'FLIMout'
+%Varargin(2) = FOV intensity map file path
+%Varargin(3) = FOV intensity map file name
 
 %Intensity image, add 'imout; to last varargin
 %Varargin(1) = 'imout' for image out and with no FOV correction
@@ -24,6 +29,9 @@ function [data,jmax, nphi,varargout] = spc_2_his(tmini,tmaxi,file_name,pth_sdt,n
 
 %changes 3/21/16: changed code to correct for intensity at the (not grouped)
 %pixel level.
+if tsm ==0
+    tsm = 1;
+end
 for ts=1:tsm
     if length(file_name)>3 %fixes filename if sdt is appended to file name
         if strcmp(file_name(end-3:end),'.sdt')
@@ -52,7 +60,7 @@ for ts=1:tsm
 end
 
 %%In this section we seperate the data into different groups, and keep
-%%tract of intensity
+%%track of intensity
 
 %First check if varargins wer passed
 if nargin > 6
@@ -64,7 +72,8 @@ if nargin > 6
         % 2), create intensity map
         
     elseif strcmp(varargin{1},'FLIMage')
-        if nargin > 8
+        if nargin > 7
+            %This section sets the intensity-normalization map
             pth_int = varargin{2};
             fn_int = varargin{3};
             if length(fn_int)>3 %fixes filename if sdt is appended to file name
@@ -77,23 +86,33 @@ if nargin > 6
             imap1 = imap1(tmini:tmaxi,:,:);
             imap = repmat(imap1,1,1,tsm);%repeats the map if there are mulitple cycles per image
         else
+            %This section sets the intensity-normalization map to null (if
+            %no info is given)
             ivec = 1;
             imap1 = pi*ones(4096,128,128); %%If you do not input int map, we use a pi map
             imap1 = imap1(tmini:tmaxi,:,:);
             imap = repmat(imap1,1,1,tsm);%repeats the map if there are mulitple cycles per image
         end
 
+        if nargin > 9
+            %This section will boxcar sum pixels together
+            reach = varargin{4};
+            if reach>0
+            datat = boxcar_averager(datat,reach);
+            imap = boxcar_averager(imap,reach);
+            end
+        end
+        
         for k = 1:128
             for j = 1:128               
                 ivec(j+(k-1)*128) = sum(imap(:,j,k)); %total photon number of intensity map, reshaped into line
                 pmt(j+(k-1)*128) = sum(datat(:,j,k)); %total photon number of data, reshaped into line                
                 dataout(:,j+(k-1)*128)=datat(:,j,k);
             end
-        end       
+        end 
         data = dataout';
         jmax = 128*128;
-        nphi = pmt./ivec;
-        varargout{1} = pmt;
+        nphi = pmt./(ivec./mean(ivec));
         return
     else
         pth_int = varargin{1};
@@ -133,7 +152,7 @@ if  length(size(ld))==2
 elseif ngr==1
     dataout = squeeze(sum(sum(datat,3),2));
     nphi = sum(dataout);
-    varargout{1} = 1;
+    varargout{1} = sum(ld,1);
 else
     %Otherwise build grouped pixels, number of photons in each pixel group (ni),
     %and relative intensity (sinti)
@@ -188,5 +207,20 @@ else
     %varargout{1} = sinti;
 end
 data=dataout';
-jmax = ngr; %g-1; % REPLACE "g-1" in other thrt = 2,3 in code
+jmax = ngr; 
+end
+
+function [data_smoothed] = boxcar_averager(data,reach)
+data_smoothed = zeros(size(data));
+[~,rows,cols] = size(data(1,:,:));
+for i=1+reach:rows-reach
+    for j = 1+reach:cols-reach
+        for ip = -reach:reach
+            for jp = -reach:reach                
+                data_smoothed(:,i,j) = data(:,i+ip,j+jp)+data_smoothed(:,i,j);                
+            end
+        end
+    end
+end
+
 end

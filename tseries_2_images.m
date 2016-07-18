@@ -1,6 +1,6 @@
 %clear;
 jmax = 20;
-base_filename = 'm5';
+base_filename = 'm2';
 jind = 0;
 combine_images =0;
 

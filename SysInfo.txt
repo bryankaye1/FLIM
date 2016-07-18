@@ -1,4 +1,8 @@
-C:\Users\Bryan\Documents\MATLAB\data\2015-4-2\irf
-C:\Users\Bryan\Documents\MATLAB\data\2015-4-2\wigs
-C:\Users\Bryan\Documents\MATLAB\data\2015-4-2\wigs
-C:\Users\Bryan\Documents\MATLAB\data\2015-4-2\donor-only
+C:\Users\Bryan\Documents\MATLAB\data\2016-06-23\irf
+C:\Users\Bryan\Documents\MATLAB\data\2016-06-22\wigs
+C:\Users\Bryan\Documents\MATLAB\data\2016-06-22\wigs
+C:\Users\Bryan\Documents\MATLAB\data\2016-06-23\UF4_2e5_100sec_noasters
+0.20
+0.00253
+40.01
+0.010.1

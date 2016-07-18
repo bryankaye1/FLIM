@@ -31,7 +31,7 @@ make_figures = optargs;
 
 for j= 1:length(file_names)
     
-    [pmat,jmax,ni,sinti,imagedata] = spc_2_his(1,4096,file_names{j},paths{j},1,1,'imout');
+    [pmat,jmax,ni,imagedata] = spc_2_his(1,4096,file_names{j},paths{j},1,1,'imout');
     raw_images{j} = squeeze(imagedata);
 end
 

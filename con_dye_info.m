@@ -17,7 +17,6 @@ info.lifetime = 3.94;
 save(loadname,'info');
 %%
 
-
 clear info tempdata
 loadname = 'lm-his';
 tempdata =  load(loadname);

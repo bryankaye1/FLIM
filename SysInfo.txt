@@ -1,7 +1,7 @@
-C:\Users\Bryan\Documents\MATLAB\data\2016-06-23\irf
+C:\Users\Bryan\Documents\MATLAB\data\2016-08-09\FlAsH_and_ReAsH_1to1\irf
 C:\Users\Bryan\Documents\MATLAB\data\2016-06-22\wigs
 C:\Users\Bryan\Documents\MATLAB\data\2016-06-22\wigs
-C:\Users\Bryan\Documents\MATLAB\data\2016-06-23\UF4_2e5_100sec_noasters
+C:\Users\Bryan\Documents\MATLAB\data\2016-08-09\FlAsH_and_ReAsH_1to1\alexa488_16x
 0.20
 0.00253
 40.01

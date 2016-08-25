@@ -1,4 +1,4 @@
-function [data,jmax, nphi,varargout] = spc_2_his(tmini,tmaxi,file_name,pth_sdt,ngr,tsm,varargin)
+function [data,jmax, nphi,varargout] = spc_2_his_256(tmini,tmaxi,file_name,pth_sdt,ngr,tsm,varargin)
 %sort pixels by intensity, equal pixels per group
 %set tsm for 1 exposure. tsm > 1 for time series
 % nphi is number of photons per group
@@ -38,7 +38,7 @@ for ts=1:tsm
         file_name2 = strcat(file_name,'.sdt');
     else
         if tsm <10
-            file_name2 = strcat(file_name,'_c',num2str(ts),'.sdt');
+            file_name2 = strcat(file_name,'_c0',num2str(ts),'.sdt');
         elseif tsm < 100
             if ts<10
                 file_name2 = strcat(file_name,'_c0',num2str(ts),'.sdt');
@@ -46,9 +46,11 @@ for ts=1:tsm
                 file_name2 = strcat(file_name,'_c',num2str(ts),'.sdt');
             end
         end
+        
     end
     ld = sdt_to_vector(pth_sdt,file_name2);
     if length(size(ld))==3
+        ld = make128(ld);
         datat(:,:,1+128*(ts-1):128*ts) = ld(tmini:tmaxi,:,:);
         hislen = tmaxi-tmini+1;
     end
@@ -72,7 +74,7 @@ if nargin > 6
             fn_int = varargin{3};
             fn_int = remove_sdt(fn_int); %removes ".sdt" from end of filename if present
             fn_int = [fn_int,'.sdt'];
-            imap = sdt_to_vector(pth_int, fn_int);
+            imap = make128(sdt_to_vector(pth_int, fn_int));
             FOV_int = sum(imap(tmini:tmaxi,:,:),1);
             FOV_int = FOV_int/mean(mean(FOV_int));
             data = squeeze(data)./squeeze(FOV_int);
@@ -86,7 +88,7 @@ if nargin > 6
             fn_int = varargin{3};
             fn_int = remove_sdt(fn_int); %removes ".sdt" from end of filename if present
             fn_int = [fn_int,'.sdt'];
-            imap1 = sdt_to_vector(pth_int, fn_int);
+            imap1 = make128(sdt_to_vector(pth_int, fn_int));
             imap1 = imap1(tmini:tmaxi,:,:);
             imap = repmat(imap1,1,1,tsm);%repeats the map if there are mulitple cycles per image
         else
@@ -107,7 +109,7 @@ if nargin > 6
             end
         end
         
-        for k = 1:128
+        for k = 1:128*tsm
             for j = 1:128               
                 ivec(j+(k-1)*128) = sum(imap(:,j,k)); %total photon number of intensity map, reshaped into line
                 pmt(j+(k-1)*128) = sum(datat(:,j,k)); %total photon number of data, reshaped into line                
@@ -124,6 +126,7 @@ if nargin > 6
         fn_int = remove_sdt(fn_int); %removes ".sdt" from end of filename if present
         fn_int = [fn_int,'.sdt'];
         imap1 = sdt_to_vector(pth_int, fn_int);
+        imap1 = make128(imap1);
         imap1 = imap1(tmini:tmaxi,:,:);
         imap = repmat(imap1,1,1,tsm);%repeats the map if there are mulitple cycles per image
     end
@@ -141,13 +144,9 @@ if  length(size(ld))==2
     ngr = 1;
     varargout{1} = 1;
     %if ngr is 1, group pixels from image into FLIM vector
-elseif ngr==1 %%%NO FOV CORRECTION!!! for 1 pixel
-    if exist('imap','var')
-    nphi = sum(sum(sum(datat,1)./(sum(imap,1)/mean(mean(sum(imap,1))))));
-    else
-    nphi = sum(sum(sum(datat)));
-    end    
+elseif ngr==1
     dataout = squeeze(sum(sum(datat,3),2));
+    nphi = sum(dataout);
     varargout{1} = sum(ld,1);
 else
     %Otherwise build grouped pixels, number of photons in each pixel group (ni),
@@ -162,7 +161,7 @@ else
             datat2(:,j+(k-1)*128) = datat(:,j,k); %flimage, linearized
         end
     end
-    
+    clear datat imap
     %Here we renormalize pixel intensity before sorting
     pmt = pmt./(ivec/mean(ivec));    
     %ind is index of pixels, sorted from lowest to highest photon counts
@@ -176,6 +175,7 @@ else
         %int_map_sort(m) = ivec(ind(m));
         pmtsort(m) = pmt(ind(m));
     end
+    clear data2 ivec
     %int_map_sort = int_map_sort/mean(int_map_sort);
     
     %%Here we ensure that the number of groups is such that every
@@ -229,5 +229,17 @@ if length(filename)>3 %fixes filename if sdt is appended to file name
     end
 end
 new_filename = filename;
+
+end
+
+function [data128] = make128(data256)
+data128 = zeros(4096,128,128);
+for i=1:128
+    for j=1:128
+        i_beg = 2*i-1;
+        j_beg = 2*j-1;
+        data128(:,i,j) = sum(sum(data256(:,i_beg:i_beg+1,j_beg:j_beg+1),3),2);
+    end
+end
 
 end

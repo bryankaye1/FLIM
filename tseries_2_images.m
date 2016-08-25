@@ -1,12 +1,13 @@
-%clear;
-jmax = 20;
-base_filename = 'm2';
+clear;
+
+jmax = 60;
+base_filename = '2UF';
 jind = 0;
 combine_images =0;
 
-for j = 1:jmax
+for j = 2:jmax
     jind = jind +1;
-    pth_data{jind} = 'C:\Users\Bryan\Documents\MATLAB\data\2015-4-2\';
+    pth_data{jind} = 'C:\Users\Bryan\Documents\MATLAB\data\2016-07-31\';
     
     if jmax < 10
         dataname{jind} = strcat(base_filename,'_c',num2str(j));

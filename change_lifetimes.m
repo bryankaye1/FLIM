@@ -1,4 +1,4 @@
-function [set_matnum] = change_lifetimes(MatName_in,w1vec,varargin)
+function [set_matnum] = change_lifetimes(MatName_in,w1vec,int_image,varargin)
 numvarargs = length(varargin);
 optargs = {0};
 optargs(1:numvarargs) = varargin;
@@ -35,7 +35,7 @@ for i = w1vec
     set_matnum = str2num(matstart)+ind+1;
     end
     
-    save(MatName, 'input');
+    save(MatName, 'input',int_image);
 end
 
 fprintf('w1 is %s:%s:%s ending in Matin %s\n',num2str(w1vec(1)),...

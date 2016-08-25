@@ -72,7 +72,7 @@ function data = bh_getdatablock(sp, block_no)
         otherwise
             data = [];
             disp('Data type not recognized cannot read block');
-            fclose(fid)
+            fclose(fid);
             return
     end
     switch meas_mode

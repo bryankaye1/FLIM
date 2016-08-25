@@ -38,7 +38,7 @@ for ts=1:tsm
         file_name2 = strcat(file_name,'.sdt');
     else
         if tsm <10
-            file_name2 = strcat(file_name,'_c',num2str(ts),'.sdt');
+            file_name2 = strcat(file_name,'_c0',num2str(ts),'.sdt');
         elseif tsm < 100
             if ts<10
                 file_name2 = strcat(file_name,'_c0',num2str(ts),'.sdt');
@@ -46,10 +46,11 @@ for ts=1:tsm
                 file_name2 = strcat(file_name,'_c',num2str(ts),'.sdt');
             end
         end
+        
     end
     ld = sdt_to_vector(pth_sdt,file_name2);
     if length(size(ld))==3
-        datat(:,:,1+128*(ts-1):128*ts) = ld(tmini:tmaxi,:,:);
+        datat(:,:,1+256*(ts-1):256*ts) = ld(tmini:tmaxi,:,:);
         hislen = tmaxi-tmini+1;
     end
 end
@@ -93,7 +94,7 @@ if nargin > 6
             %This section sets the intensity-normalization map to null (if
             %no info is given)
             ivec = 1;
-            imap1 = pi*ones(4096,128,128); %%If you do not input int map, we use a pi map
+            imap1 = pi*ones(4096,256,256); %%If you do not input int map, we use a pi map
             imap1 = imap1(tmini:tmaxi,:,:);
             imap = repmat(imap1,1,1,tsm);%repeats the map if there are mulitple cycles per image
         end
@@ -107,15 +108,15 @@ if nargin > 6
             end
         end
         
-        for k = 1:128
-            for j = 1:128               
-                ivec(j+(k-1)*128) = sum(imap(:,j,k)); %total photon number of intensity map, reshaped into line
-                pmt(j+(k-1)*128) = sum(datat(:,j,k)); %total photon number of data, reshaped into line                
-                dataout(:,j+(k-1)*128)=datat(:,j,k);
+        for k = 1:256
+            for j = 1:256               
+                ivec(j+(k-1)*256) = sum(imap(:,j,k)); %total photon number of intensity map, reshaped into line
+                pmt(j+(k-1)*256) = sum(datat(:,j,k)); %total photon number of data, reshaped into line                
+                dataout(:,j+(k-1)*256)=datat(:,j,k);
             end
         end 
         data = dataout';
-        jmax = 128*128;
+        jmax = 256*256;
         nphi = pmt./(ivec./mean(ivec));
         return % This makes it so we dont overwrite our output later in the "return FLIM vectors" section
     else
@@ -128,7 +129,7 @@ if nargin > 6
         imap = repmat(imap1,1,1,tsm);%repeats the map if there are mulitple cycles per image
     end
 else
-    imap1 = pi*ones(4096,128,128); %%If you do not input int map, we use a pi map
+    imap1 = pi*ones(4096,256,256); %%If you do not input int map, we use a pi map
     imap1 = imap1(tmini:tmaxi,:,:);
     imap = repmat(imap1,1,1,tsm);%repeats the map if there are mulitple cycles per image
 end
@@ -141,25 +142,21 @@ if  length(size(ld))==2
     ngr = 1;
     varargout{1} = 1;
     %if ngr is 1, group pixels from image into FLIM vector
-elseif ngr==1 %%%NO FOV CORRECTION!!! for 1 pixel
-    if exist('imap','var')
-    nphi = sum(sum(sum(datat,1)./(sum(imap,1)/mean(mean(sum(imap,1))))));
-    else
-    nphi = sum(sum(sum(datat)));
-    end    
+elseif ngr==1
     dataout = squeeze(sum(sum(datat,3),2));
+    nphi = sum(dataout);
     varargout{1} = sum(ld,1);
 else
     %Otherwise build grouped pixels, number of photons in each pixel group (ni),
     %and relative intensity (sinti)
-    ivec = pi*ones(128*128*tsm,1);%
-    pmt = pi*ones(128*128*tsm,1);%
-    datat2 = pi*ones(hislen,128*128*tsm);
-    for k = 1:128*tsm
-        for j=1:128
-            ivec(j+(k-1)*128) = sum(imap(:,j,k)); %total photon number of intensity map, reshaped into line
-            pmt(j+(k-1)*128) = sum(datat(:,j,k)); %total photon number of data, reshaped into line
-            datat2(:,j+(k-1)*128) = datat(:,j,k); %flimage, linearized
+    ivec = pi*ones(256*256*tsm,1);%
+    pmt = pi*ones(256*256*tsm,1);%
+    datat2 = pi*ones(hislen,256*256*tsm);
+    for k = 1:256*tsm
+        for j=1:256
+            ivec(j+(k-1)*256) = sum(imap(:,j,k)); %total photon number of intensity map, reshaped into line
+            pmt(j+(k-1)*256) = sum(datat(:,j,k)); %total photon number of data, reshaped into line
+            datat2(:,j+(k-1)*256) = datat(:,j,k); %flimage, linearized
         end
     end
     

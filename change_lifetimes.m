@@ -35,10 +35,10 @@ for i = w1vec
     set_matnum = str2num(matstart)+ind+1;
     end
     
-    save(MatName, 'input',int_image);
+    save(MatName, 'input','int_image');
 end
 
-fprintf('w1 is %s:%s:%s ending in Matin %s\n',num2str(w1vec(1)),...
-    num2str(w1vec(2)-w1vec(1)),num2str(w1vec(end)),MatName(35:strfind(MatName,'.')-1));
+%fprintf('w1 was added from %s:%s:%s ending in Matin %s\n',num2str(w1vec(1)),...
+%    num2str(w1vec(2)-w1vec(1)),num2str(w1vec(end)),MatName(35:strfind(MatName,'.')-1));
 
 end

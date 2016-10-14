@@ -95,6 +95,7 @@ function blk_info = bh_blockinfo(sp, varargin)
         %disp( sprintf('%d: %s', i, data.mode));
         blk_info{i} = data;
     end
+    fclose(fid); % This line was added by BK on 8/31/2016
 end
 function y = bh_isvalid(filename)
 

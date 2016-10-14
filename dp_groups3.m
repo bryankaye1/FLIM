@@ -8,26 +8,27 @@
 %combine_exposures_FLIMage: number of FLIM data sets (exposures) you want
 %to combine into one FLIM data.
 clear input;
-tsm=0; %%This is for concatanating multiple images into one large image. tsm < 100;
-num_int_bins = 16;
-combine_exposures_FLIMage =0; %Use for
-reach = 0;% Used for boxcar averaging FLIM data
+
+num_int_bins = 0;
 ngr = 1;%jind*100000;
 split_matin = 1; %Set to 1 to "split" set into one group, set to >1 for number of matins you want
-save_image = 1;
 
-set_matnum = 15609;
+set_matnum = 0;
 tfw = 0;
 tbac = 0;
 w1vec = []; %.25:0.05:3; Leave empty unless you want to do a w1sweep
-base_name = '4UF';
-cpath = 'C:\Users\Bryan\Documents\MATLAB\data\2016-08-19\';
+base_name = [];
+cpath = 'C:\Users\Bryan\Documents\MATLAB\data\2016-08-30\';
 int_cor = 'atto565_2e5_pdms_100sec';
-data_shift_name = 'atto565_2e5_pdms_100sec_first';
+data_shift_name = '1UF_NORAN_2nd_sample_endpoint_100sec';
 
 w1step = .01; w1min= 1; w1max = 1;
-w2step = .01; w2min =  3.71; w2max = 3.71;
+w2step = .01; w2min =  3; w2max = 4;
 fracstep = 0.001;
+combine_exposures_FLIMage =0; %Use for
+reach = 0;% Used for boxcar averaging FLIM data
+tsm=10; %%This is for concatanating multiple images into one large image. tsm < 100;
+save_image = 1;
 %%Cell used for the data. A new matin will be created for each filename
 
 if ~isempty(base_name)
@@ -44,13 +45,8 @@ if ~isempty(base_name)
     end  
 end
 
-% dataname_cell = {'UF1_1e6_100sec','UF1_2e5_100sec','UF2_1e6_100sec',...
-%     'UF2_2e5_100sec','UF3_1e6_100sec','UF3_2e5_100sec',...
-%     'UF4_1e6_100sec_noasters','UF4_2e5_100sec_noasters',...
-%     'UF_tax_1e5_100sec','UF_tax_1e5_100sec'};
 
-%dataname_cell=  {'DR1_2e5_100sec','DR2_2e5_100sec','DR3_2e5_100sec','DR4_2e5_100sec_noasters',...
-%               'DR1_1e6_100sec', 'DR2_1e6_100sec', 'DR3_1e6_100sec', 'DR4_1e6_100sec_noasters'};
+dataname_cell=  {'donor_noran','DONOR_NORAN_2nd_sample'};
                 
 if set_matnum
     junk2 = input('You are setting the matnum. Careful...Press enter to continue\n'); 
@@ -94,7 +90,7 @@ for dataname_ind = dataname_cell
             pth_ext = pth_wigs; %ignore this
             extname = wigsname; %IGRNORE THIS
             
-            shiftstep = .2; shiftmin = 0; shiftmax = 30;
+            shiftstep = .2; shiftmin = -15; shiftmax = 15;
             w2step_shift = .0025; w2min_shift = 3; w2max_shift = 4;
             backstep = .01; backmin = .01; backmax = .1;
             
@@ -104,7 +100,7 @@ for dataname_ind = dataname_cell
             [old_filenames, count] = fscanf(cppout, '%s');
             new_filenames = [pth_irf, irfname, pth_wigs, wigsname,...
                 pth_ext,extname, pth_data_for_shift, data_shift_name,...
-                num2str(shiftstep),num2str(shiftmin,shiftmax), num2str(w2step_shift),...
+                num2str(shiftstep),num2str(shiftmin),num2str(shiftmax), num2str(w2step_shift),...
                 num2str(w2min_shift),num2str(w2max_shift),num2str(backstep),...
                 num2str(backmin),num2str(backmax)];
             fclose(cppout);
@@ -116,7 +112,7 @@ for dataname_ind = dataname_cell
                 fileID = fopen('SysInfo.txt','w');
                 fprintf(fileID,'%s%s\n%s%s\n%s%s\n%s%s\n',pth_irf, ...
                     irfname, pth_wigs, wigsname, pth_ext,extname,pth_data_for_shift,...
-                    data_shift_name,num2str(shiftstep),num2str(shiftmin,shiftmax),...
+                    data_shift_name,num2str(shiftstep),num2str(shiftmin),num2str(shiftmax),...
                     num2str(w2step_shift), num2str(w2min_shift),num2str(w2max_shift),...
                     num2str(backstep),num2str(backmin),num2str(backmax));
                 fclose(fileID);
@@ -266,7 +262,7 @@ for dataname_ind = dataname_cell
     
     if save_image
         [int_image,~,~] = spc_2_his(tmini,tmaxi,dataname,pth_data...
-            ,1,0,'save_int_image',cpath,int_cor); %#ok<UNRCH>
+            ,1,tsm,'save_int_image',cpath,int_cor); %#ok<UNRCH>
     else
         int_image = 0;
     end

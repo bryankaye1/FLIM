@@ -1,6 +1,6 @@
 function [bneed, pulsewb, irf, irfsim, irf_pdf, wig, tmini, tmaxi, ext,varargout] =...
     make_irf_wig_ext_minres(pth_irf, irfname, pth_wigs, wigsname, pth_ext, extname, data_shift_name, pth_data_for_shift,...
-    sfrac, shiftmin, shiftmax, w2step, w2min, w2max, backstep, backmin, backmax)
+    sfrc, shiftmin, shiftmax, w2step, w2min, w2max, backstep, backmin, backmax)
 %This file is used to make the IRF vector, wiggles vector, extract vector. It also calculates the
 %amount of missing time. It also makes the IRF_pdf (which is used for
 %simulating data).
@@ -77,86 +77,77 @@ ext = ext/sum(ext); %Normalize extract pdf
 %Checks if files passed is in time series, if so, uses loads whole series
 tsm = length(dir([pth_data_for_shift,data_shift_name,'_c*']));
 [data1,~,~] = spc_2_his(tmini,tmaxi,data_shift_name,pth_data_for_shift,1,tsm);
+data = data1/sum(data1);
 
-intx = 1:sfrac:bins;
+intx = 1:sfrc:bins;
 irfint = interp1(1:length(irf),irf,intx);
-sumres = inf;
 binskeep = bins - bneed;
+s = Tlaser/bins:Tlaser/bins:Tlaser;
+x = 1:binskeep;
+
+p0 =[0,3.7,.02];
+shifti= 0;
+w2i = 3.7;
+backi = 0.01;
+[y] = flim_decay_shift(shifti, w2i,backi,sfrc, bins, bneed, irf, Tlaser, wig, data);
 
 
-wigstep = 1;
-wigmin =0;
-wigmax =0;
-for wigshifti = wigmin:wigstep:wigmax
-    
-    wigs = circshift(wig,wigshifti)';
-    
-    for shifti = shiftmin:sfrac:shiftmax
-        
-        shift = round(shifti/sfrac);
-        irf2 = circshift(irfint',shift);
-        ga = interp1(intx, irf2, 1:bins);
-        
-        for w2i = w2min:w2step:w2max
-            
-            s = Tlaser/bins:Tlaser/bins:Tlaser;
-            f2 = exp(-s/w2i); %signal over one period
-            f2 = [f2 f2]; %signal over 2 consecutive periods
-            f2con = conv(f2,ga); %PDF after conv
-            f2bar = f2con(bins+1:2*bins); %pdf after mod-ing by laser period
-            f2h = f2bar(1:binskeep); %Keep only the appropriate bins
-            f2h = f2h/sum(f2h);
-            for backi = backmin:backstep:backmax
-                back = backi/bins;
-                model = (f2h + back).*wigs;
-                
-                model = model/sum(model);
-                data = data1/sum(data1);
-                ga =ga/sum(ga);
-                
-                res = (data-model)./sqrt(data);
-                sumresi = sum(res.^2);
-                
-                if sumresi < sumres
-                    sumres = sumresi;
-                    shiftb = shifti;
-                    gab = ga;
-                    w2b = w2i;
-                    backb = backi;
-                    wigshiftb = wigshifti;
-                    wigsb = wigs;
-                    
-                    modelb = model;
-                    datab = data;
-                    resb = res;
-                    
-                end
-            end
-        end
-    end 
-    
-end
-    
-if shiftb == shiftmin || shiftb == shiftmax
-    fprintf('Warning: shift hit edge of search space\n');
-    error('shift hit edge of search space');
-end
-if w2b == w2min || w2b == w2max
-    fprintf('Warning: shift hit edge of search space\n');
-    error('Warning: shift hit edge of search space');
-end
 
-    %% Plots & irf
-    
-    fprintf('shift %3.4f  lifetime %3.3f  back %3.6f Kres %3.6f \n', shiftb, w2b, backb, 1000*sumres);
-    figure(11); clf; plot((datab)); hold on; plot((modelb), 'r'); title('Shift: Model vs Data');
-    figure(12); clf; plot(resb); title('Residue'); drawnow;
+ft = fittype( 'flim_decay_shift(shifti, w2i, backi, sfrc, bins, bneed, irf, Tlaser, wig, x)',...
+    'problem',{'sfrc', 'bins', 'bneed', 'irf', 'Tlaser', 'wig'},'independent','x' );
+
+fit(x', data', ft, 'StartPoint', p0, 'problem',{sfrc, bins, bneed, irf, Tlaser, wig});
+
+%Add a line that saves
+%shiftb = shifti;
+%w2b
+%backb
+%modelb
+%irf
+   
+    %% Plots & irf 
+    fprintf('shift %3.4f  lifetime %3.3f  back %3.6f Kres %3.6f \n', shiftb, w2b, backb, 1000*sum(res.^2));
+    figure(11); clf; 
+    subplot(2,1,1); hold on; plot(data); plot(modelb, 'r'); title('Shift: Model vs Data');
+    subplot(2,1,2); plot(resb); title('Residue'); drawnow;
 %     figure(3); clf; plot(log10(irf1)); title('IRF before threshold');
 %     figure(4); clf; plot(log10(irf)); title('IRF after threshold and de-wiggled');
 %     figure(5); clf; plot(wig); title('wig');
 %     figure(6); clf; plot(log10(ext)); title('Ext');
 %     
-    pulsewb = bins; irf = gab;
-    save(strcat(pth_irf,'current.mat'), 'bneed', 'pulsewb', 'irf', 'tmini', 'tmaxi', 'ext','irfname','wigsb','gab','shiftb','w2b','backb');
+    pulsewb = bins; %irf = gab;
+    save(strcat(pth_irf,'current.mat'), 'bneed', 'pulsewb', 'irf', 'tmini',...
+        'tmaxi', 'ext','irfname','wigsb','gab','shiftb','w2b','backb');
     
-end
+end    
+
+
+% function [f] =  runnested(p0,x,data,sfrc,irfint,intx,s,bins,binskeep,wigs)
+%       
+%     function [y] = flimodel(shifti,w2i,backi,x)
+% %         shift = round(shifti/sfrc);       
+% %         irf2 = circshift(irfint',shift);
+% %         ga = interp1(intx, irf2, 1:bins);
+% % 
+% %         f2 = exp(-s/w2i); %signal over one period
+% %         f2 = [f2 f2]; %signal over 2 consecutive periods
+% %         f2con = conv(f2,ga); %PDF after conv
+% %         f2bar = f2con(bins+1:2*bins); %pdf after mod-ing by laser period
+% %         f2h = f2bar(1:binskeep); %Keep only the appropriate bins
+% %         f2h = f2h/sum(f2h);
+% %         
+% %         back = backi/bins;
+% %         model = (f2h + back).*wigs';
+% %         y = model/sum(model);
+% %         b=1;
+%             y = (shifti*w2i*backi)*x;
+%         
+%     end
+% 
+% ft = fittype( 'flimodel( shifti , w2i, backi, x)' );
+% f = fit(x, data, ft, 'StartPoint', p0);
+% % Nested function that computes the objective function
+% end
+    
+
+

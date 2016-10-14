@@ -8,53 +8,63 @@
 %combine_exposures_FLIMage: number of FLIM data sets (exposures) you want
 %to combine into one FLIM data.
 clear;
-tsm=10; %%This is for concatanating multiple images into one large image. tsm < 100;
-num_int_bins = 0;
-combine_exposures_FLIMage =0; %Use for
-reach = 0;% Used for boxcar averaging FLIM data
-ngr = 16;%jind*100000;
-split_matin = 1; %Set to 1 to "split" set into one group, set to >1 for number of matins you want
-save_image = 1;
 
-set_matnum = 0;
+set_matnum = 23110;%20538;
+num_int_bins = 0;
+ngr = 1;%jind*100000;
+split_matin = 1; %Set to 1 to "split" set into one group, set to >1 for number of matins you want
+
 tfw = 0;
 tbac = 0;
-w1vec = .25:0.05:3;% [] % Leave empty unless you want to do a w1sweep
-base_name = [];
-cpath = 'C:\Users\Bryan\Documents\MATLAB\data\2016-08-09\FlAsH_and_ReAsH_1to1\';
-int_cor = 'alexa488_16x';
-segment_FLIMdata=1;
+base_name = 'uf';
+cpath = 'C:\Users\Bryan\Documents\MATLAB\data\2016-10-13\';
+int_cor = 'coumarin_2e5_pdms_100sec';
+data_shift_name = 'coumarin_2e5_pdms_100sec';%'uf1_2min_c50';The IRF can be a little offset (in time) from the data, this data is used to align/find the offset and shift the data
+
+w1step = .01; w1min= 1; w1max = 1;
+w2step = .01; w2min = 3.68; w2max = 3.68; %3.6 used for cells. %3.68 used for extract
 
 %%Cell used for the data. A new matin will be created for each filename
 if ~isempty(base_name)
-    %cd(cpath);
     name_list  = ls([cpath,base_name,'*']);
-    %cd('C:\Users\Bryan\Documents\MATLAB\FLIM\');
     dlmwrite('datanames_preview.txt',name_list,'delimiter','');
     winopen('C:\Users\Bryan\Documents\MATLAB\FLIM\datanames_preview.txt')
     size_name_list = size(name_list);
     junk = input('Check file name list then press enter if ok');
+    fprintf('Continuing...\n');
     for dc_ind = 1:size_name_list(1)
         name=strrep(name_list(dc_ind,:),' ','');
         dataname_cell{dc_ind} = name;
     end  
 end
-dataname_cell ={'01','02','03','04','05'};
 
-%dataname_cell = {'UF1_2e5_100sec','UF2_2e5_100sec','UF3_2e5_100sec','UF4_2e5_100sec_noasters'...
-%                'UF1_1e6_100sec','UF2_1e6_100sec','UF3_1e6_100sec','UF4_1e6_100sec_noasters'};
 
-%dataname_cell=  {'DR1_2e5_100sec','DR2_2e5_100sec','DR3_2e5_100sec','DR4_2e5_100sec_noasters',...
-%               'DR1_1e6_100sec', 'DR2_1e6_100sec', 'DR3_1e6_100sec', 'DR4_1e6_100sec_noasters'};
-                
+%dataname_cell = {'1DONOR_9ACC_CELL3'};
+
+%dataname_cell = {'1DONOR_199ACC_CELL1','1DONOR_199ACC_CELL2'};
+
+%dataname_cell = {'1DONOR_49ACC_CELL1','1DONOR_49ACC_CELL2','1DONOR_49ACC_CELL3',...
+%    '1DONOR_99ACC_CELL1','1DONOR_99ACC_CELL1','1DONOR_99ACC_CELL1'};
+
+%dataname_cell = {'1DONOR_19ACC_CELL1','1DONOR_19ACC_CELL2','1DONOR_19ACC_CELL4',...
+%    '1DONOR_19ACC_CELL5_interphase'};
+
+%dataname_cell = {'1DONOR_9ACC_CELL1','1DONOR_9ACC_CELL2','1DONOR_9ACC_CELL3',...
+%    '1DONOR_9ACC_CELL4_interphase'};
+%This section is for parameters that are zero for time-series analysis
+tsm= 0; %%This is for concatanating images that all end in '_C#' into one large image. tsm < 100;
+reach = 0;% Used for boxcar averaging FLIM data %Set to 
+combine_exposures = 0;
+make_FLIMage = 0;
+segment_FLIMdata=0;
+w1vec =  [];%.25:.05:2; %Set this vector to the ADDITIONAL w1 you want to set by creating new matins. Leave empty unless you want to do a w1sweep
+
 if set_matnum
     junk = input('You are setting the matnum. Careful...Press enter to continue\n'); %#ok<*UNRCH>
+    fprintf('ok. script running:\n');
 end
             
 %% Set search parameters
-w1step = .01; w1min= .2; w1max = 3;%1.73    %1.064-2016/2/27  --- %1.73  %1.6 used for extract 8/27 and 9/5 (actual 9/5 is 1.59) %1.5 used for taxol extract; %.8-2 1.05 %w1min must be an integer multiple of w1step.
-w2step = .01; w2min =  3.69; w2max = 3.69; %3.77 %3.67  %3.802     %3.82/1.49   %3.8 used for 3/7/15 data %3.745 usd for 8/27 E %3.87 used for taxol extract; %3.81 was found for 8/25 b80 and 8/24 extract
-
 fracstep = 0.001; %.005 with w1/w2 set is 10sec per group
 if w2min~=w2max
     prstep = fracstep; prmin=0; prmax = 0;
@@ -68,15 +78,12 @@ thr = 0.01;
 jmax = 1;
 cyclesmax = 1;
 exptmax= 1;
+dataname_matnum = {};
 for dataname_ind = dataname_cell
-    %[input] = ini_input(1,1,1); %Initialize input structure
     input = [];
-    %for reach = 0:0
     comment = sprintf('dataname is %s',dataname_ind{1});
     for expt = 1:exptmax %determined by number of time series
-        %dataname = dname(dataname,tseries, add_num_2_dataname, expt, exptmax);
         for cindex = 1:cyclesmax %determined by number of w2 spots
-            %dataname = dataname;
             %% Select files for IRF, wigs, IRF shift, wigs shift, and extract signal
             dataname = dataname_ind{1};
             %cpath = 'C:\Users\Bryan\Documents\MATLAB\data\2016-07-31\';
@@ -85,101 +92,78 @@ for dataname_ind = dataname_cell
             pth_wigs = 'C:\Users\Bryan\Documents\MATLAB\data\2016-06-22\'; %file path wiggles
             pth_data_for_shift = cpath;
             irfname = 'irf';
-            data_shift_name = 'alexa488_16x';%'tholand1_128x128_sec3'; %The IRF can be a little offset (in time) from the data, this data is used to align/find the offset and shift the data
             wigsname = 'wigs';
             pth_ext = pth_wigs; %ignore this
             extname = wigsname; %IGRNORE THIS
             
-            shiftstep = .2; shiftmin = 0; shiftmax = 30;
+            shiftstep = .2; shiftmin = -5; shiftmax = 15;
             w2step_shift = .0025; w2min_shift = 3; w2max_shift = 4;
             backstep = .01; backmin = .01; backmax = .1;
-            
             %%   Make IRF, wigs, irf shift
-            sysinfo = 0; % Set to 1 if you want to force a rerun of make_irf_wig_ext
-            cppout = fopen('SysInfo.txt');
-            [old_filenames, count] = fscanf(cppout, '%s');
+            sysinfo = 0; % Set to 1 if you want to force a rerun of make_irf_wig_ext. other
+            if exist([cpath,'SysInfo.txt'],'file')==2
+                cppout = fopen([cpath,'SysInfo.txt'],'r+');
+                [old_filenames, count] = fscanf(cppout, '%s');     
+                fclose(cppout);
+            else
+                old_filenames = 'sysinfo did not exist';       
+            end
             new_filenames = [pth_irf, irfname, pth_wigs, wigsname,...
                 pth_ext,extname, pth_data_for_shift, data_shift_name,...
-                num2str(shiftstep),num2str(shiftmin,shiftmax), num2str(w2step_shift),...
+                num2str(shiftstep),num2str(shiftmin),num2str(shiftmax), num2str(w2step_shift),...
                 num2str(w2min_shift),num2str(w2max_shift),num2str(backstep),...
                 num2str(backmin),num2str(backmax)];
-            fclose(cppout);
-            if isequal(new_filenames,old_filenames) && sysinfo == 0;
-            else
-                [~, ~, ~, ~, ~, ~, ~] = make_irf_wig_ext_minres_256(pth_irf, irfname, pth_wigs,...
+            if ~isequal(new_filenames,old_filenames) || sysinfo ~= 0;
+                [~, ~, ~, ~, ~, ~, ~] = make_irf_wig_ext_minres(pth_irf, irfname, pth_wigs,...
                     wigsname, pth_ext, extname, data_shift_name, pth_data_for_shift,...
                     shiftstep, shiftmin, shiftmax, w2step_shift, w2min_shift, w2max_shift, backstep, backmin, backmax);
-                fileID = fopen('SysInfo.txt','w');
+                fileID = fopen([cpath,'SysInfo.txt'],'w');
                 fprintf(fileID,'%s%s\n%s%s\n%s%s\n%s%s\n',pth_irf, ...
                     irfname, pth_wigs, wigsname, pth_ext,extname,pth_data_for_shift,...
-                    data_shift_name,num2str(shiftstep),num2str(shiftmin,shiftmax),...
+                    data_shift_name,num2str(shiftstep),num2str(shiftmin),num2str(shiftmax),...
                     num2str(w2step_shift), num2str(w2min_shift),num2str(w2max_shift),...
                     num2str(backstep),num2str(backmin),num2str(backmax));
                 fclose(fileID);
             end
             %% Load in IRF, wigs
-             load(strcat(pth_irf,'current.mat'));
-%            tempf=load(strcat(pth_irf,'current.mat'),'-mat','bneed',...
-%                 'pulsewb', 'tmini', 'tmaxi', 'ext','irfname','wigsb','gab','shiftb');
-           % brem = tempf(1).bneed;   %Number of bins to remove from the 12.58ns to match BH data
-           % bins = tempf(1).pulsewb; %Number of bins that make up 12.58ns
-%            tmini = tempf(1).tmini;
-%            tmaxi = tempf(1).tmaxi;
-%            ext = tempf(1).ext;
-         %   wig = tempf(1).wigsb;
-           % ga = tempf(1).gab; %ga is IRF after shift
-           % binskeep = bins-brem;
-           
+            load(strcat(pth_irf,'current.mat'));
             jind =0;      
             while jind < jmax %jind is pixel group# jmax is the total number of pixel groups
                 jind = jind +1;
                 %% This section is where data is saved
                 %This sub-section saved FLIMages and all pixel groups.
                 if jind==1
-                    if combine_exposures_FLIMage > 0
-                        %put combine flimage code here
+                    if combine_exposures > 0
+                        %combine_alarm= input('STOP!!! combine FLIMage not setup yet\n');
+                        pmat = 0;
+                        int_image = 0;
+                        ni = 0;
+                        for ce_ind = 1:combine_exposures
+                            dataname_comexp = append_timeseries_names(dataname,ce_ind,combine_exposures);
+                            [pmat_temp,ni_temp,int_image_temp] = loadspc(tmini,tmaxi,dataname_comexp,...
+                            pth_data,int_cor,cpath,0,reach);
+                            pmat = pmat + pmat_temp;
+                            int_image = int_image + int_image_temp;
+                            ni = ni + ni_temp;
+                        end
                     else
-                        [pmat,ni] = loadspc256(tmini,tmaxi,dataname,...
+                        [pmat,ni,int_image] = loadspc(tmini,tmaxi,dataname,...
                             pth_data,int_cor,cpath,tsm,reach);
                     end
                     if segment_FLIMdata
-                    [outint,outFLIM] = segment_FLIMage(ni,pmat,2,.05);
+                    [pmat,ni,segment_results] = segment_FLIMage(ni,pmat,2,.05); %normally set to 2 and .05
+                    else
+                        segment_results = 0;
                     end
-                    
-                    if ngr>1
+                    if reach>0 || make_FLIMage     
+                    elseif ngr>1
                         [pmat,jmax,ni,pixs_per_bin] = makengr(pmat,ni,ngr);
-
                     elseif num_int_bins>0
-                        %This sub-section combines pixel groups from with similar intensities into SUPER PIXELS
-                        %Number of photons per super pixel is saved in nph_counts. The nph_counts
-                        %field in the input file only exists when this section is run
-                        %Average number of photons per pixel in the super pixel is saved under nph_mean->ni.
-                        intbin = min(ni)+(0:num_int_bins)*(max(ni)-min(ni))/num_int_bins;
-                        nph_mean = [];
-                        dataout = [];
-                        pixel_counts = [];
-                        for k = 1:num_int_bins
-                            nph = 0;
-                            datag = 0;
-                            count =0;
-                            for l = 1:length(ni)
-                                if intbin(k) <= ni(l) && intbin(k+1)> ni(l)
-                                    count = count  +1;
-                                    nph = ni(l)+nph;
-                                    datag = pmat(l,:)+datag;
-                                elseif k==num_int_bins && intbin(k) <= ni(l) && intbin(k+1)>= ni(l)
-                                    count = count  +1;
-                                    nph = ni(l)+nph;
-                                    datag = pmat(l,:)+datag;
-                                end
-                            end
-                            if count > 0
-                                nph_mean =[nph_mean nph/count];
-                                dataout = [dataout;datag];
-                                pixel_counts = [pixel_counts count];
-                            end
-                        end
-                        jmax = length(nph_mean);
+                        [jmax, nph_mean, pixel_counts, dataout] = make_int_bins(ni,num_int_bins,pmat);
+                    elseif ngr==1
+                        pmat = sum(pmat,1);
+                        jmax = 1;
+                        ni = sum(pmat);
                     end
                 end
                 
@@ -218,7 +202,6 @@ for dataname_ind = dataname_cell
                     input(cindex,expt,jind).shiftb = shiftb;
                     %                         input(cindex,expt,jind).r1s = r1s; input(cindex,expt,jind).r2s = r2s;
                     %                         input(cindex,expt,jind).r1l = r1l; input(cindex,expt,jind).r2l = r2l;
-                    
                     input(cindex,expt,jind).dataname = dataname;
                     input(cindex,expt,jind).pth_data = pth_data;
                     input(cindex,expt,jind).irf_name= irfname;
@@ -246,33 +229,50 @@ for dataname_ind = dataname_cell
                     input(cindex,expt,jind).tfw = tfw;
                     input(cindex,expt,jind).split_matin = split_matin;
                     input(cindex,expt,jind).reach = reach;
-                    input(cindex,expt,jind).combine_exposures_FLIMage = combine_exposures_FLIMage;               
+                    input(cindex,expt,jind).combine_exposures_FLIMage = combine_exposures;               
                 end
             end
         end
     end
-    
-    if save_image
-        [int_image,~,~] = spc_2_his_256(tmini,tmaxi,[dataname,'_c01'],pth_data...
-            ,1,0,'save_int_image',cpath,int_cor); %#ok<UNRCH>
-    else
-        int_image = 0;
-    end
-    
     %%
     if split_matin <2        
-        [set_matnum] = save_matin(input,int_image,set_matnum,dataname,w1vec);               
+        [set_matnum] = save_matin(input,int_image,segment_results,set_matnum,dataname,w1vec);   
+        dataname_matnum{end+1} = {dataname, set_matnum};
     else
-        [set_matnum] = split_input(input,int_image,set_matnum,dataname,split_matin);
+        [set_matnum] = split_input(input,int_image,segment_results,set_matnum,dataname,split_matin);
     end
 end
+%%
+[start_nums,end_nums,tseries_names] = find_series(dataname_matnum);
+if ~isempty(start_nums)
+    for i = 1:length(tseries_names)
+        fprintf( '%s c01-c%s %3.0f:%3.0f\n', tseries_names{i}, num2str(end_nums(i)-start_nums(i)+1),...
+            start_nums(i), end_nums(i));
+    end
+    
+    fprintf('\n\n vector to enter into FFcomp script:\n [');
+    for i = 1:length(tseries_names)-1
+        fprintf( '%3.0f:%3.0f,', start_nums(i), end_nums(i));
+    end
+    fprintf( '%3.0f:%3.0f', start_nums(end), end_nums(end));
+    fprintf('];\n');
+end
+
+% dataname_cell ={'ACC_ONLY_CELL1','ACC_ONLY_CELL2',...
+%     '1DONOR_3ACC_CELL1','1DONOR_3ACC_CELL2','1DONOR_3ACC_CELL3_interphase',...
+%    '1DONOR_1ACC_CELL1','1DONOR_1ACC_CELL2','1DONOR_1ACC_CELL3_interphase',...
+%    '3DONOR_1ACC_CELL1','3DONOR_1ACC_CELL2_no_labeled_tub','3DONOR_1ACC_CELL3','3DONOR_1ACC_CELL4_interphase'...
+%    'DONOR_ONLY_CELL1','DONOR_ONLY_CELL2','DONOR_ONLY_CELL3','DONOR_ONLY_CELL4','DONOR_ONLY_CELL5_interphase'};
+
+
+
+%w1step = .01; w1min= 3; w1max = 3;%1.73    %1.064-2016/2/27  --- %1.73  %1.6 used for extract 8/27 and 9/5 (actual 9/5 is 1.59) %1.5 used for taxol extract; %.8-2 1.05 %w1min must be an integer multiple of w1step.
+%w2step = .01; w2min = 1; w2max = 5;%3.69 %3.77 %3.67  %3.802     %3.82/1.49   %3.8 used for 3/7/15 data %3.745 usd for 8/27 E %3.87 used for taxol extract; %3.81 was found for 8/25 b80 and 8/24 extract
 
 
 
 
-
-
-tseries = 0; %add_num_2_dataname = 'n;
+%tseries = 0; %add_num_2_dataname = 'n;
 % if add_num_2_dataname > tseries
 %     exptmax = add_num_2_dataname;
 % else

@@ -114,7 +114,7 @@ for wigshifti = wigmin:wigstep:wigmax
                 data = data1/sum(data1);
                 ga =ga/sum(ga);
                 
-                res = (data-model)./sqrt(data);
+                res = (data-model)./sqrt(model); %changed from sqrt(data) to sqrt(model) 
                 sumresi = sum(res.^2);
                 
                 if sumresi < sumres
@@ -138,11 +138,11 @@ for wigshifti = wigmin:wigstep:wigmax
 end
     
 if shiftb == shiftmin || shiftb == shiftmax
-    fprintf('Warning: shift hit edge of search space\n');
+    fprintf('Warning: shift hit edge of search space: shitf b was %f\n', shiftb);
     error('shift hit edge of search space');
 end
 if w2b == w2min || w2b == w2max
-    fprintf('Warning: shift hit edge of search space\n');
+    fprintf('Warning: w2b when finding shift hit edge of search space: w2b is %2.2f \n',w2b);
     error('Warning: shift hit edge of search space');
 end
 

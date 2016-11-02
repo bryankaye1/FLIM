@@ -18,6 +18,7 @@ elseif set_matnum
     set_matnum = set_matnum + 1;
 else
     fprintf('%s matin %s\n',dataname,matnum);  
+    set_matnum = str2num(matnum)+1; %#ok<ST2NM>
 end
 end
 

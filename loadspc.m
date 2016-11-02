@@ -9,7 +9,8 @@ for ts=1:tsm
     file_name = remove_sdt(file_name); %removes ".sdt" from end of filename if present
     if tsm ==1
         file_name2 = strcat(file_name,'.sdt');
-    else
+    else %This subsection padds the suffix '_c0...' with the appropriate amount of zeros.
+        %could have used sprintf instead of if statements
         if tsm <10
             file_name2 = strcat(file_name,'_c',num2str(ts),'.sdt');
         elseif tsm < 100

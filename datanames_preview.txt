@@ -1,0 +1,3 @@
+fig3_dyes_only1.sdt  
+fig3_dyes_only2.sdt  
+fig3_newdyes_only.sdt

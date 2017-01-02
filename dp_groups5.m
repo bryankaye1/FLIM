@@ -9,30 +9,30 @@
 %to combine into one FLIM data.
 clear;
 
-set_matnum = 25796;%Use this to set the matnumber
+set_matnum = 0;%Use this to set the matnumber
 num_int_bins = 0; %Use this to create equally spaced intensity groups.
 ngr = 1;%jind*100000;
 split_matin = 128; %Set to 1 to "split" set into one group, set to >1 for number of matins you want
 
 tfw = .6;
 tbac = .2;
-base_name = [];
-dataname_cell = {'m0_nopol'};
-cpath = 'C:\Users\Bryan\Documents\MATLAB\data\2016-06-29\';
-int_cor = 'atto-4x';
-data_shift_name = 'atto-4x';%'DONOR_NORAN2_c99';%'uf1_2min_c50';The IRF can be a little offset (in time) from the data, this data is used to align/find the offset and shift the data
+base_name = '';
+dataname_cell = {'2P5A_20DE','1P5A_20DE'};
+cpath = 'C:\Users\Bryan\Documents\MATLAB\data\2016-12-22\';
+int_cor = 'atto4x';
+data_shift_name = '20DE';%'DONOR_NORAN2_c99';%'uf1_2min_c50';The IRF can be a little offset (in time) from the data, this data is used to align/find the offset and shift the data
 skip_remake_shift = 1;
 
 %This section is for parameters that are zero for time-series analysis
 tsm= 0; %%This is for concatanating images that all end in '_C#' into one large image. tsm < 100;
 segment_FLIMdata=0; blurr = 1; im_thr = .22;
 
-w1step = .01; w1min= 1.6; w1max = 1.6; %2.11 used for cells
-w2step = .01; w2min = 3.8; w2max = 3.8; %3.62 used for cells. %3.68 used for extract
+w1step = .01; w1min= .97; w1max = .97; %2.11 used for cells
+w2step = .01; w2min = 3.63; w2max = 3.63; %3.62 used for cells. %3.68 used for extract
 
-reach = 5;% Used for boxcar averaging FLIM data %Set to
+reach = 2;
+make_FLIMage = 1;% Used for boxcar averaging FLIM data %Set to
 combine_exposures = 10; %Used for adding exposures together
-make_FLIMage = 1;
 w1vec =  [];%.25:.05:2; %Set this vector to the ADDITIONAL w1 you want to set by creating new matins. Leave empty unless you want to do a w1sweep
 
 %%Cell used for the data. A new matin will be created for each filename
@@ -121,7 +121,8 @@ for dataname_ind = 1:length(dataname_cell)
                     else
                         segment_results = 0;
                     end
-                    if reach>0 || make_FLIMage
+                    if make_FLIMage
+                        jmax = length(pmat);
                     elseif ngr>1
                         [pmat,jmax,ni,pixs_per_bin] = makengr(pmat,ni,ngr);
                     elseif num_int_bins>0
@@ -143,61 +144,12 @@ for dataname_ind = 1:length(dataname_cell)
                 end
                 
                 %% Save the info into the input file %%
-                for save_input_mat = 1:1
-                    if split_matin==0
-                        split_matin=1;
-                    end
-                    
-                    input(1,1,1).jmax = jmax/split_matin;
-                    input(1,1,1).exptmax = exptmax;
-                    input(1,1,1).cyclesmax = cyclesmax;
-                    
-                    input(cindex,expt,jind).datahis = p;
-                    input(cindex,expt,jind).ga = gab; %ga is name of vector of shifted irf
-                    
-                    input(cindex,expt,jind).w1step = w1step; input(cindex,expt,jind).w1min = w1min; input(cindex,expt,jind).w1max = w1max;
-                    input(cindex,expt,jind).w2step = w2step; input(cindex,expt,jind).w2min = w2min; input(cindex,expt,jind).w2max = w2max;
-                    input(cindex,expt,jind).prstep = prstep; input(cindex,expt,jind).prmin = prmin; input(cindex,expt,jind).prmax = prmax;
-                    input(cindex,expt,jind).w02step = w02step; input(cindex,expt,jind).w02min = w02min; input(cindex,expt,jind).w02max = w02max;
-                    input(cindex,expt,jind).extstep = fracstep; input(cindex,expt,jind).extmin = 0; input(cindex,expt,jind).extmax = 0;
-                    input(cindex,expt,jind).fracstep = fracstep;
-                    
-                    input(1,1,1).backstep = shift.backstep; input(1,1,1).backmin = shift.backmin; input(1,1,1).backmax = shift.backmax;
-                    input(1,1,1).w2step_shift = shift.w2step; input(1,1,1).w2min_shift = shift.w2min; input(1,1,1).w2max_shift = shift.w2max;
-                    input(1,1,1).shiftstep = shift.step; input(1,1,1).shiftmin = shift.min; input(1,1,1).shiftmax = shift.max;
-                    input(1,1,1).shiftb = shiftb;
-                    %                         input(cindex,expt,jind).r1s = r1s; input(cindex,expt,jind).r2s = r2s;
-                    %                         input(cindex,expt,jind).r1l = r1l; input(cindex,expt,jind).r2l = r2l;
-                    input(cindex,expt,jind).dataname = dataname;
-                    input(cindex,expt,jind).pth_data = pth_data;
-                    input(cindex,expt,jind).irf_name= irfname;
-                    input(cindex,expt,jind).pth_irf = pth_irf;
-                    
-                    input(1,1,1).data_shift_name = data_shift_name;
-                    input(1,1,1).pth_data_for_shift = pth_data_for_shift;
-                    input(1,1,1).ngr = ngr;
-                    input(1,1,1).ni = ni;
-                    
-                    input(1,1,1).thr = thr;
-                    input(1,1,1).brem = bneed;
-                    input(1,1,1).bins= pulsewb;
-                    input(1,1,1).tmini = tmini;
-                    input(1,1,1).tmaxi = tmaxi;
-                    input(1,1,1).ext= ext;
-                    input(1,1,1).wig = wigsb;
-                    
-                    input(1,1,1).pth_wigs = pth_wigs;
-                    input(1,1,1).wigsname = wigsname;
-                    input(1,1,1).pth_ext = pth_ext;
-                    input(1,1,1).extname = extname;
-                    input(1,1,1).comment = comment;
-                    input(1,1,1).tbac = tbac;
-                    input(1,1,1).tfw = tfw;
-                    input(1,1,1).split_matin = split_matin;
-                    input(1,1,1).reach = reach;
-                    input(1,1,1).combine_exposures_FLIMage = combine_exposures;
-                    input(1,1,1).tsm = tsm;
-                end
+                [input]  = contruct_input_struct(split_matin,jmax,exptmax,...
+                    cyclesmax,p,gab,w1step,w1min,w1max,w2step,w2min,w2max,prstep,prmin,prmax,...
+                    w02step,w02min,w02max,fracstep,shift,shiftb,dataname,pth_data,irfname,pth_irf,...
+                    data_shift_name,pth_data_for_shift,ngr,ni,thr,bneed,pulsewb,tmini,tmaxi,...
+                    ext,wigsb,pth_wigs,wigsname,pth_ext,extname,comment,tbac,tfw,reach,...
+                    combine_exposures,tsm,cindex,expt,jind,input);
             end
         end
     end
@@ -316,7 +268,6 @@ end
 %                 sinfo(cindex,expt,jind).w03 = w03;
 %                 sinfo(cindex,expt,jind).w3= w3;
 %                 sinfo(cindex,expt,jind).nps = nps;
-
 
 
 %%%%%%%

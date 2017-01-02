@@ -1,7 +1,7 @@
 function [tsm,dataname_cell] = find_filenames(cpath,base_name,tsm)
 
 name_list  = ls([cpath,base_name,'*']);
-dlmwrite('datanames_preview.txt',name_list,'delimiter','');
+dlmwrite('C:\Users\Bryan\Documents\MATLAB\FLIM\datanames_preview.txt',name_list,'delimiter','');
 winopen('C:\Users\Bryan\Documents\MATLAB\FLIM\datanames_preview.txt')
 size_name_list = size(name_list);
 junk = input('Check file name list then press enter if ok');

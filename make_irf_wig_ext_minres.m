@@ -134,7 +134,6 @@ for wigshifti = wigmin:wigstep:wigmax
             end
         end
     end 
-    
 end
     
 if shiftb == shiftmin || shiftb == shiftmax
@@ -156,7 +155,13 @@ end
 %     figure(5); clf; plot(wig); title('wig');
 %     figure(6); clf; plot(log10(ext)); title('Ext');
 %     
-    pulsewb = bins; irf = gab;
-    save(strcat(pth_irf,'current.mat'), 'bneed', 'pulsewb', 'irf', 'tmini', 'tmaxi', 'ext','irfname','wigsb','gab','shiftb','w2b','backb');
+    pulsewb = bins; irf = gab; shiftstep=sfrac;
+    w2step_shift= w2step; w2min_shift=w2min; w2max_shift =w2max;
+    
+    save(strcat(pth_irf,'current.mat'), 'bneed', 'pulsewb', 'irf', 'tmini',...
+        'tmaxi', 'ext','irfname','wigsb','gab','shiftb','w2b','backb',...
+        'pth_irf', 'irfname', 'pth_wigs','wigsname', 'pth_ext', 'extname', ...
+        'data_shift_name', 'pth_data_for_shift','shiftstep', 'shiftmin', 'shiftmax',...
+        'w2step_shift', 'w2min_shift', 'w2max_shift', 'backstep', 'backmin', 'backmax');
     
 end

@@ -17,6 +17,13 @@ high_exp = {6625:6688,[0,.4],[0,660],1,[0,.1,.2,.3,.4],0:100:600};
 low_acc = {5857:5920,[0,.15],[0,300],10,[0,.05,.1,.15,.2],[0,50,100,150,200,250]}; 
 high_acc = {5537:5600,[0,.15],[0,300],10,[0,.05,.1,.15,.2],[0,50,100,150,200,250]};
 superhigh_acc = {4841:4904,[0,.2],[0,277],10,[0,.05,.1,.15,.2],[0,50,100,150,200,250]}; %index
+notax_superhigh_acc = {26346:26473,[0,.2],[0,277],10,[0,.05,.1,.15,.2],[0,50,100,150,200,250]};
+%25956:26083 for 2p5A, which had a higher pf when taxol was added
+
+no_taxol_too_high_superhigh_acc_ = {25796:25923,[0,.2],[0,277],10,[0,.05,.1,.15,.2],[0,50,100,150,200,250]};
+
+
+
 
 pol_cbar = [0,.5];
 pol_cbar_tix = [0,.1,.2,.3,.4,.5];
@@ -39,7 +46,7 @@ pol_cell = {pol_low1,pol_low2,pol_low3,pol_hi1,pol_hi2,pol_hi3,pol_hi4,...
 plotind = 0;
 %for j_outer = 1:length(pol_cell)
 
-sample = superhigh_acc;%pol_cell{j_outer}; 
+sample = notax_superhigh_acc;%pol_cell{j_outer}; 
 
 
 %for keyind = superhigh_acc
@@ -77,7 +84,9 @@ for i=sample{1}
    al = FLIMage_mat(1,1,1).w1Best/FLIMage_mat(1,1,1).w2Best;
     
 end
+
 ni = FLIMage_mat(1,1,1).ni;
+
 
 % try 
 %     range = FLIMage_mat(1,1,1).range;
@@ -200,8 +209,8 @@ figure(plotind*3+3); clf; hold on;
 plot(x,y,'.','Markersize', 3,'Color','k');
 
 if sample{1}(1)==4841
-set(gca,'XTick',0:100:300,'Ytick',0:0.03:.12,'YTickLabel',[],'XTickLabel',[]);
-axis([15 350 0 .12]);
+set(gca,'XTick',0:100:300,'Ytick',0:0.04:.2,'YTickLabel',[],'XTickLabel',[]); %was 'Ytick',0:0.03:.12 
+axis([15 350 0 .2]); %Was axis([15 350 0 .12]); in original submission
 else
  plot(x_mean,y_mean, '.', 'MarkerSize',30);    
 end

@@ -30,13 +30,14 @@ for ts=1:tsm
     dataout = ld(tmini:tmaxi); %check if you should transpose this
     nphi = sum(dataout);
     int_image = 0; %No image for 2D vector only
+    data = dataout';
     return
     end
 end
 
 %This section loads and makes the intensity-normalization map
 if strcmp(FOV_fn,'none')
-    imap1 = ones(hislen,128,128); %%If you do not input int map, we use a pi map
+    imap1 = ones(4096,128,128); %%If you do not input int map, we use a pi map
     imap1 = sum(imap1(tmini:tmaxi,:,:),1); 
 else
     FOV_fn = remove_sdt(FOV_fn);
@@ -48,14 +49,13 @@ end
     imap1 = squeeze(imap1);
     imap = repmat(imap1,1,tsm);%repeats the map if there are mulitple cycles per image
     imap = imap/mean(mean(imap));
-
+    nph = nph./imap;
+    
 if reach>0
     datat = boxcar_averager(datat,reach);
-    nph = boxcar_averager_int(nph/imap,reach); %NEEDS TESTING
-    imap = 1; %This is so we don't double normalize in the linearize step
+    nph = boxcar_averager_int(nph,reach); %NEEDS TESTING
 end
 
-nph = nph./imap;
 nphi = reshape(nph,1,numel(nph));
 dataout = reshape(datat,hislen,round(numel(datat)/hislen));
 data = dataout';
@@ -78,7 +78,7 @@ end
 
 function [data_smoothed] = boxcar_averager_int(data,reach)
 data_smoothed = zeros(size(data));
-[~,rows,cols] = size(data);
+[rows,cols] = size(data);
 for i=1+reach:rows-reach
     for j = 1+reach:cols-reach
         for ip = -reach:reach

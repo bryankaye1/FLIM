@@ -22,6 +22,7 @@ thr3l = logical(thr3);
 outint = inint(thr3l);
 outFLIM = inFLIM(thr3l,:);
 out_image={int_image,blurred,thr1,thr3};
+drawnow;
 end
 
 function [square_image] = make2D(oimage)

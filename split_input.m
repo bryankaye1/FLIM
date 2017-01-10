@@ -8,9 +8,9 @@ for k = 1:split_matin
     pstart = 1+(k-1)*(jmax);
     pend = k*(jmax);
     input = input_holdon(1,1,round(pstart):round(pend));
-    [MatName,SimName] = write_to_mlist(set_matnum);
+    [MatName,matnum] = write_to_mlist(set_matnum);
     if k==1 % This section prints out the matin #s
-        matstart = MatName(35:strfind(MatName,'.')-1);
+        matstart = num2str(matnum); %MatName(35:strfind(MatName,'.')-1);
         matend = num2str(str2num(matstart) + split_matin - 1);
         fprintf('%s split_matin: Matin %s:%s\n',dataname,matstart,matend);
         fileID = fopen('matin_prints.txt','at');

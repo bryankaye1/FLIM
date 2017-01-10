@@ -1,6 +1,8 @@
 %Plot cells
 clear;
-close all;
+%close all;
+
+addpath(fileparts(pwd));
 
 poster_cells = [25255,25266,25252,25267];
 ind = 0;
@@ -15,10 +17,16 @@ tic
 dataname_ind = {};
 
 %Load in data and images
+tic
 [~,output,flagoutput] = load_mat_data(i,1,'pause_output_DNE',1);
+toc
+
+tic
 [imagedata,seg_results] = load_int_image(round(i));
+toc
 
 %%
+tic
 image2display = display_segres(imagedata,seg_results); %Delete?
 al = output(1,1,1).w1min/output(1,1,1).w2min;
 %%Get FRET fraction and photons from FRETters
@@ -49,7 +57,7 @@ end
 k = ind;
 xmax = 200;
 ymax = .1;
-figure(1); hold on;
+figure(1); clf; hold on;
 errorbar(xintmat{k},ymat{k},stdmat{k},'.');
 errorbar(xintmat{k}(thr_pho{k}),ymat{k}(thr_pho{k}),stdmat{k}(thr_pho{k}),'.','Color','red');
 xmodel = 0:xmax*.001:xmax;
@@ -63,4 +71,5 @@ axis([0 xmax 0 ymax]);
 figure(2); clf; imshow(seg_results{1}(1:128,1:128)); title(ti{k});
 
 b =1;
+toc
 end

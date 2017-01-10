@@ -7,7 +7,7 @@ warning('off','MATLAB:load:variableNotFound');
 if ispc
     nstr_input = ['Y:\Users\bkaye\cluster\matin\matin',i,'.mat'];
 else
-    nstr_input = ['/Volumes/needlemanfs3/Users/bkaye/cluster/matin/matin',i,'.mat'];
+    nstr_input = ['/Users/bryankaye/Documents/MATLAB/data/matin/matin',i,'.mat'];
 end
 load(nstr_input,'-mat','int_image','seg_results');
 varargout{1} = 0;

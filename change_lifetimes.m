@@ -1,4 +1,4 @@
-function [set_matnum] = change_lifetimes(MatName_in,w1vec,int_image,varargin)
+function [set_matnum] = change_lifetimes(MatName_in,matnum,w1vec,int_image,varargin)
 numvarargs = length(varargin);
 optargs = {0};
 optargs(1:numvarargs) = varargin;
@@ -27,11 +27,11 @@ for i = w1vec
     end
     
     if specify_matin==0
-    [MatName,SimName] = write_to_mlist; 
+    [MatName,~] = write_to_mlist; 
     set_matnum=0;
     else
-    matstart = MatName_in(35:strfind(MatName_in,'.')-1);
-    [MatName,SimName] = write_to_mlist(str2num(matstart)+ind);
+    matstart = matnum; %MatName_in(35:strfind(MatName_in,'.')-1);
+    [MatName,~] = write_to_mlist(str2num(matstart)+ind);
     set_matnum = str2num(matstart)+ind+1;
     end
     

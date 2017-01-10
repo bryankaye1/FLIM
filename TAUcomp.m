@@ -3,8 +3,8 @@
 % enter "int" = low/med/hi for auto plots
 close all;
 clear;
-imin_vec = 25946;%[10090,10106,10122,10138,10154,10170];%10000;%
-imax_vec = 25951;%[10105,10121,10137,10153,10169,10185];%10005;%
+imin_vec = 26475;%[10090,10106,10122,10138,10154,10170];%10000;%
+imax_vec = 26530;%[10105,10121,10137,10153,10169,10185];%10005;%
 
 acquisition_time = [100,20,50,100,20,50];
 w2verb = 1;
@@ -19,7 +19,7 @@ for fov_ind = 1:length(imax_vec)
     w2errvec = [];
 while i<imax+1
     ind = ind+1;
-    [inputm,outputm,flag] = load_mat_data(i);
+    [inputm,outputm,flag] = load_mat_data(i,'local',1);
     %If matout/in exists, execute code
     if ~flag
         %%Plot/Print results from short lifetime fitting

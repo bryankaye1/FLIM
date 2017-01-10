@@ -6,7 +6,8 @@
     if ispc
     addpath('Y:\Users\bkaye\cluster\matlab_scripts\');
     else
-    addpath('/Volumes/needlemanfs3/Users/bkaye/cluster/matlab_scripts/');
+    %addpath(genpath(pwd));
+    addpath('./cluster_scripts/matlab_scripts/');
     end 
     
     T=12.58;

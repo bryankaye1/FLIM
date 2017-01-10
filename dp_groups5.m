@@ -11,28 +11,28 @@ clear;
 
 set_matnum = 0;%Use this to set the matnumber
 num_int_bins = 0; %Use this to create equally spaced intensity groups.
-ngr = 1;%jind*100000;
-split_matin = 128; %Set to 1 to "split" set into one group, set to >1 for number of matins you want
+ngr = 16;%jind*100000;
+split_matin = 1; %Set to 1 to "split" set into one group, set to >1 for number of matins you want
 
-tfw = .6;
-tbac = .2;
-base_name = '';
-dataname_cell = {'2P5A_20DE','1P5A_20DE'};
-cpath = 'C:\Users\Bryan\Documents\MATLAB\data\2016-12-22\';
+tfw = 0;
+tbac = 0;
+base_name = ['DONOR_WAIT'];
+dataname_cell = {'DONOR_SPINDLE1_c01','uf_SPINDLE1_c01'};
+cpath = '/Users/bryankaye/Documents/MATLAB/data/2017-01-05/';
 int_cor = 'atto4x';
-data_shift_name = '20DE';%'DONOR_NORAN2_c99';%'uf1_2min_c50';The IRF can be a little offset (in time) from the data, this data is used to align/find the offset and shift the data
+data_shift_name = 'DONOR_NOWAIT1_c01';%'DONOR_NORAN2_c99';%'uf1_2min_c50';The IRF can be a little offset (in time) from the data, this data is used to align/find the offset and shift the data
 skip_remake_shift = 1;
 
 %This section is for parameters that are zero for time-series analysis
-tsm= 0; %%This is for concatanating images that all end in '_C#' into one large image. tsm < 100;
+tsm= 1; %%This is for concatanating images that all end in '_C#' into one large image. tsm < 100;
 segment_FLIMdata=0; blurr = 1; im_thr = .22;
 
-w1step = .01; w1min= .97; w1max = .97; %2.11 used for cells
-w2step = .01; w2min = 3.63; w2max = 3.63; %3.62 used for cells. %3.68 used for extract
+w1step = .01; w1min= .97; w1max = .97; %.97 for 11-4 extract%2.11 used for cells
+w2step = .01; w2min = 3.58; w2max = 3.58; %3.62 used for cells. %3.68 used for extract
 
-reach = 2;
-make_FLIMage = 1;% Used for boxcar averaging FLIM data %Set to
-combine_exposures = 10; %Used for adding exposures together
+reach = 0;
+make_FLIMage = 0;% Used for boxcar averaging FLIM data %Set to
+combine_exposures = 0; %Used for adding exposures together
 w1vec =  [];%.25:.05:2; %Set this vector to the ADDITIONAL w1 you want to set by creating new matins. Leave empty unless you want to do a w1sweep
 
 %%Cell used for the data. A new matin will be created for each filename
@@ -69,7 +69,7 @@ for dataname_ind = 1:length(dataname_cell)
             %cpath = 'C:\Users\Bryan\Documents\MATLAB\data\2016-07-31\';
             pth_irf = cpath; %file path IRF
             pth_data = cpath; %file path data
-            pth_wigs = 'C:\Users\Bryan\Documents\MATLAB\data\2016-06-22\'; %file path wiggles
+            pth_wigs = '/Users/bryankaye/Documents/MATLAB/data/2017-01-03/'; %file path wiggles
             pth_data_for_shift = cpath;
             irfname = 'irf';
             wigsname = 'wigs';

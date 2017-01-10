@@ -51,10 +51,10 @@ cherry_cells = [25225,25255,25315,25345,25252,25312,25302,25332];
 reg_cells = [25284,25314,25395,25163,25280];
 poster_cells = [25255,25252,25266,25267];
 
-fig5_control = [25081:25090];
+%fig5_control = [25081:25090];
 
 %fixed = fix_w1(8011:8067,1.8,8238);
-ivec = fig5_control;%[22606:22655,22707:22755,22756: 22805]; %[jul31_donor_ran,jul31_uf1_ran,jul31_uf2_ran];
+ivec = nov1_bestcells;%[22606:22655,22707:22755,22756: 22805]; %[jul31_donor_ran,jul31_uf1_ran,jul31_uf2_ran];
 acq_time = 10;
 %%%
 show_fit=1;

@@ -3,10 +3,11 @@ function [input_str,output,varargout] = load_mat_data(input1,varargin)
 p = inputParser;
 p.addRequired('i',@isscalar);
 p.addOptional('verbose',1,@isscalar);
-p.addParameter('elapsed',0,@isscalar)
-p.addParameter('local',0,@isscalar)
-p.addParameter('pause_output_DNE',0,@isscalar)
-p.addParameter('load_like',0,@isscalar)
+p.addParameter('elapsed',0,@isscalar);
+p.addParameter('local',0,@isscalar);
+p.addParameter('cluster',0,@isscalar);
+p.addParameter('pause_output_DNE',0,@isscalar);
+p.addParameter('load_like',0,@isscalar);
 p.parse(input1,varargin{:});
 fn_inputs = p.Results;
 
@@ -19,28 +20,38 @@ i = num2str(fn_inputs.i);
 %Varargin(1) = 1 for warning the matout does not exist
 
 try
-    if fn_inputs.local
-        nstr_output = ['C:\Users\Bryan\Documents\MATLAB\data\matout\matout',i,'.mat'];
-        nstr_input = ['Y:\Users\bkaye\cluster\matin\matin',i,'.mat'];
-    else
-        if ispc
-            nstr_output = ['Y:\Users\bkaye\cluster\matout\matout',i,'.mat'];
+    if ispc
+        if fn_inputs.local
+            nstr_output = ['C:\Users\Bryan\Documents\MATLAB\data\matout\matout',i,'.mat'];
             nstr_input = ['Y:\Users\bkaye\cluster\matin\matin',i,'.mat'];
         else
-            nstr_output = ['/Volumes/needlemanfs3/Users/bkaye/cluster/matout/matout',i,'.mat'];
-            nstr_input = ['/Volumes/needlemanfs3/Users/bkaye/cluster/matin/matin',i,'.mat'];
+            nstr_output = ['Y:\Users\bkaye\cluster\matout\matout',i,'.mat'];
+            nstr_input = ['Y:\Users\bkaye\cluster\matin\matin',i,'.mat'];
+        end
+        input_dump = load(nstr_input,'-mat','input');
+    else
+        nstr_output = ['/Users/bryankaye/Documents/MATLAB/data/matout/matout',i,'.mat'];
+        
+        if fn_inputs.local
+            input_dump = load(['/Users/bryankaye/Documents/MATLAB/data/'...
+                'matin/matin',i,'.mat'],'-mat','input');
+        elseif fn_inputs.cluster
+            input_dump = load(['smb://needlemanfs3.rc.fas.harvard.edu/'...
+                'needlemanfs3/Users/bkaye/cluster/matin/matin',i,'.mat'],'-mat','input');
+        else
+            input_dump.input = 'NA';
         end
     end
     
+    
     %load output, conditional load likelihood
     if fn_inputs.load_like
-            load(nstr_output,'-mat','output','eltime','like_mat'); %%OLD MATINS (I think 24787 to 25057, the files was named like_mat)
-            varargout{3} = like_mat;
+        load(nstr_output,'-mat','output','eltime','like_mat'); %%OLD MATINS (I think 24787 to 25057, the files was named like_mat)
+        varargout{3} = like_mat;
     else
-    load(nstr_output,'-mat','output','eltime');
+        load(nstr_output,'-mat','output','eltime');
     end
     
-    input_dump = load(nstr_input,'-mat','input');
     flag = 0;
     
     if fn_inputs.elapsed
@@ -58,7 +69,7 @@ catch exception
     if ispc
         nstr = ['Y:\Users\bkaye\cluster\matin\matin',i,'.mat'];
     else
-        nstr = ['/Volumes/needlemanfs3/Users/bkaye/cluster/matin/matin',i,'.mat'];
+        nstr = 'NA';
     end
     input_dump = load(nstr,'-mat','input');
     

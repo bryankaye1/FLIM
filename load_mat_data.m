@@ -68,10 +68,14 @@ catch exception
     varargout{2} = 'N/A';
     if ispc
         nstr = ['Y:\Users\bkaye\cluster\matin\matin',i,'.mat'];
+        input_dump = load(nstr,'-mat','input');
     else
-        nstr = 'NA';
+        if fn_inputs.local
+            input_dump = load(['/Users/bryankaye/Documents/MATLAB/data/'...
+                'matin/matin',i,'.mat'],'-mat','input');
+        end
     end
-    input_dump = load(nstr,'-mat','input');
+    
     
     if fn_inputs.pause_output_DNE
         fprintf('matout %s does not exist.',i);

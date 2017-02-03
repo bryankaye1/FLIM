@@ -23,7 +23,7 @@ optargs(1:numvarargs) = varargin;
 [combine_wnf_wb,N_samples,use_histogram,ig_count] = optargs{:};
 
 if x>50 || strcmp(ig_count,'ignore_pcount')
-    if strcmp(combine_wnf_wb,'combine_background');
+    if strcmp(combine_wnf_wb,'combine_background')
         wfsams = randsample(wfx,N_samples,true,pwf);
         fsams = wfsams./(wfsams+al*(1-wfsams));
         fsams(isnan(fsams)) = 0;

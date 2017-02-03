@@ -1,4 +1,4 @@
-function [pfm,nmon] = fit_pf_nm(x,y,stdpr,al)
+function [pfm,nmon,varargout] = fit_pf_nm(x,y,stdpr,al)
 
 if min(x)==0
 istart = find(x==0,1,'last')+1;
@@ -12,5 +12,6 @@ fresult = fit((x)',y',fitmod,'StartPoint',[max(y),min(x)],'Weights',...
 
 pfm = fresult.a;
 nmon = fresult.b;
+varargout{1} = fresult;
 
 end

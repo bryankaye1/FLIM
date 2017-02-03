@@ -1,6 +1,4 @@
 clear;
-set(0,'DefaulttextInterpreter','none');
-addpath('Y:\Users\bkaye\cluster');
 plotFF = 0;
 %All boxcar ranges (reaches)
 % low_exp = {6049:6112,6113:6176,6177:6240,6241:6304,6305:6368,6369:6432,6433:6496};
@@ -14,7 +12,7 @@ plotFF = 0;
 %number,colorbar FRET ticks
 low_exp = {6177:6240,[0,.4],[0,660],1,[0,.1,.2,.3,.4],0:100:600};
 high_exp = {6625:6688,[0,.4],[0,660],1,[0,.1,.2,.3,.4],0:100:600};
-low_acc = {5857:5920,[0,.15],[0,300],10,[0,.05,.1,.15,.2],[0,50,100,150,200,250]}; 
+low_acc = {5857:5920,[0,.15],[0,300],10,[0,.05,.1,.15,.2],[0,50,100,150,200,250]};
 high_acc = {5537:5600,[0,.15],[0,300],10,[0,.05,.1,.15,.2],[0,50,100,150,200,250]};
 superhigh_acc = {4841:4904,[0,.2],[0,277],10,[0,.05,.1,.15,.2],[0,50,100,150,200,250]}; %index
 notax_superhigh_acc = {26346:26473,[0,.2],[0,277],10,[0,.05,.1,.15,.2],[0,50,100,150,200,250]};
@@ -22,6 +20,14 @@ notax_superhigh_acc = {26346:26473,[0,.2],[0,277],10,[0,.05,.1,.15,.2],[0,50,100
 
 no_taxol_too_high_superhigh_acc_ = {25796:25923,[0,.2],[0,277],10,[0,.05,.1,.15,.2],[0,50,100,150,200,250]};
 
+feb27_reach0 = {27266:27393,0,0,1};
+m2 = {27970:28033,0,0,1};
+m4 = {27842:27905,0,0,1};
+m5 = {27906:27969,0,0,1};
+
+m3r0 = {27778:27841,0,0,1};
+m3 = {27650:27777,0,0,1};
+m3r2 = {27522:27649,0,0,1};
 
 
 
@@ -48,57 +54,41 @@ spindle_jan5 = {27090:27217};
 plotind = 0;
 %for j_outer = 1:length(pol_cell)
 
-sample = spindle_jan5;%pol_cell{j_outer}; 
+sample = m4;%pol_cell{j_outer};
 
 
 %for keyind = superhigh_acc
 %    clear prest prestx
-    ind =0;
+ind =0;
 %for i=keyind{1}
-
-for i=spindle_jan5
+tic
+for i=sample{1}
     ind = ind + 1;
-    try
-        nstr = strcat('/Users/bryankaye/Documents/MATLAB/data/matout/matout',num2str(i),'.mat');
-        load(nstr,'-mat','FLIMage_mat');
-    catch exception
-        try 
-            nstr = strcat('C:\Users\Bryan\Documents\MATLAB\data\FLIMage_cluster\',num2str(i),'.mat');
-            load(nstr,'-mat','FLIMage_mat');
-        catch
-            fprintf('no_FLIMage_file_detected matnum%s\n',num2str(i));
-            break;
-        end
-    end 
+    
+    nstr = strcat('/Users/bryankaye/Documents/MATLAB/data/matout/matout',num2str(i),'.mat');
+    load(nstr,'-mat');
+    
     jmax = FLIMage_mat(1,1,1).jmax;
     pstart = 1+(ind-1)*jmax;
     % pend = i*(jmax/split_matin);
     
-    for j = 1:jmax 
+    for j = 1:jmax
         k = pstart+j-1;
         prest(:,k) = FLIMage_mat(1,1,j).prest;
         prestx(:,k) = FLIMage_mat(1,1,j).prestx;
         w02est(:,k) = FLIMage_mat(1,1,j).w02est;
         w02estx(:,k) = FLIMage_mat(1,1,j).w02estx;
-       % ni(k) = FLIMage_mat(1,j,1).ni;
+        % ni(k) = FLIMage_mat(1,j,1).ni;
     end
     %al = FLIMage_mat(1,1,1).w1/FLIMage_mat(1,1,1).w2;
-   al = FLIMage_mat(1,1,1).w1Best/FLIMage_mat(1,1,1).w2Best;
+    al = FLIMage_mat(1,1,1).w1Best/FLIMage_mat(1,1,1).w2Best;
     
 end
-
 ni = FLIMage_mat(1,1,1).ni;
-
-
-% try 
-%     range = FLIMage_mat(1,1,1).range;
-% catch
-%     range =0;
-% end
 boxcar_range = FLIMage_mat(1,1,1).reach;
 
 %%
-tic
+
 %flimin = inf;
 x_grid = 0:.002:1;
 count = 0;
@@ -111,112 +101,109 @@ for l = 1:128*128
     intensity(j,k) = (ni(l)/(sample{4}*((1+2*boxcar_range)^2)))*...
         (sum(prest(:,l).*prestx(:,l))+sum(w02est(:,l).*w02estx(:,l)));
     [fBest,~] = transform_wf_to_f(prest(:,l), prestx(:,l),al,...
-       w02est(:,l),w02estx(:,l),100, 'n/a',2000,'no_histogram');
+        w02est(:,l),w02estx(:,l),100, 'n/a',2000,'no_histogram');
     
-   
-    %[~,cimin,cimax] = findci(yhist,xhist,.95,'confidence_bounds');
-    %f_marg_temp = interp1(xhist,yhist,x_grid,'scalar',0)';
-    %f_marg(:,l)= f_marg_temp; %#o%#ok<*MSNU> k<SAGROW>
-
-    %[~,max_ind] = max(prest(:,l));
-    %fBest = prestx(max_ind,l);
+    flimap(j,k)= fBest;
     
-    %[~,max_ind] = max(w02est(:,l));
-    %w02Best = w02estx(max_ind,l);
-    
-    %fBest = prBest/(prBest+al*(1-prBest));
-    flimap(j,k)= fBest; 
-%    flimap_stat(j,k)= fBest; %#ok<*SAGROW>
-%     if (cimin==min(xhist) && min(xhist)<0.05)
-%        count = count+1;
-%        flimap_stat(j,k) =0;
-%     end
 end
-%count %#ok<*NOPTS>
-toc
 
 intensity = intensity(1+boxcar_range:end-boxcar_range,1+boxcar_range:end-boxcar_range);
 flimap = flimap(1+boxcar_range:end-boxcar_range,1+boxcar_range:end-boxcar_range);
-%flimap_stat = flimap_stat(1+boxcar_range:end-boxcar_range,1+boxcar_range:end-boxcar_range);
 
-figure(plotind*3+1); clf; imagesc(flimap,sample{2}); axis square;
-set(gca,'XTickLabel','','XTick',[],'YTickLabel','','YTick',[]);
-%ti = sprintf('FLIMAGE: boxcar range is %s',num2str(boxcar_range)); title(ti);
-hcb=colorbar('eastoutside');
-set(hcb,'YTick',sample{5},'YTickLabel',[]); drawnow;
+ %%
 
-figure(plotind*3+2); clf; imshow(intensity,sample{3});
-set(gca,'XTickLabel','','XTick',[],'YTickLabel','','YTick',[]);
-%ti = sprintf('Intensity Image: boxcar range is %s',num2str(boxcar_range)); title(ti);
+pf = 0.49;
+norm_FOV = 2.680e-6;
+%divided by 10 for conversation from uM to mg/ml. 
+%divide by total number of pixels to convert from FOV to per pixel norm
+norm = norm_FOV * (126*126)/10; 
+
+polmap = norm*intensity.*flimap ./ (pf*(1+(al-1).*flimap));
+figure; clf; imagesc(polmap); axis square;
+%set(gca,'XTickLabel','','XTick',[],'YTickLabel','','YTick',[]);
 gcb = colorbar('westoutside');
-set(gcb,'Ytick',sample{6},'YTickLabel',[]); drawnow;
+%set(gcb,'Ytick',sample{6},'YTickLabel',[]); drawnow;
+
+toc
+
+
+
+
 %%
 
 
-for l = 1:(128-2*boxcar_range)*(128-2*boxcar_range)
-    j = mod(l-1,(128-2*boxcar_range))+1;
-    k = floor((l-1)/(128-2*boxcar_range)) + 1;
-    x(l) =  intensity(j,k);
-    y(l) = flimap(j,k);
-    % stdpr(l) = flimaperr(j,k);
-end
 
 
-num_int_bins = 16;
-intbin = min(x)+(0:num_int_bins)*(max(x)-min(x))/num_int_bins;
-x_mean = [];
-y_mean = [];
-yp_mean =[];
-yp_mode =[];
-for k = 1:num_int_bins
-    x_total = 0;
-    y_total = 0;
-    yp_total = ones(length(x_grid),1);
-    count =0;
-    for l = 1:length(x)
-        if intbin(k) < x(l) && intbin(k+1)> x(l)
-            count = count  +1;
-            x_total = x(l)+x_total;
-            y_total = y(l)+y_total;
-            
-            %yp_total = f_marg(:,l).*yp_total;
-            if sum(isinf(yp_total)) || sum(isnan(yp_total))
-                l            
+
+
+
+if plotFF
+    for l = 1:(128-2*boxcar_range)*(128-2*boxcar_range)
+        j = mod(l-1,(128-2*boxcar_range))+1;
+        k = floor((l-1)/(128-2*boxcar_range)) + 1;
+        x(l) =  intensity(j,k);
+        y(l) = flimap(j,k);
+        % stdpr(l) = flimaperr(j,k);
+    end
+    num_int_bins = 16;
+    intbin = min(x)+(0:num_int_bins)*(max(x)-min(x))/num_int_bins;
+    x_mean = [];
+    y_mean = [];
+    yp_mean =[];
+    yp_mode =[];
+    for k = 1:num_int_bins
+        x_total = 0;
+        y_total = 0;
+        yp_total = ones(length(x_grid),1);
+        count =0;
+        for l = 1:length(x)
+            if intbin(k) < x(l) && intbin(k+1)> x(l)
+                count = count  +1;
+                x_total = x(l)+x_total;
+                y_total = y(l)+y_total;
+                
+                %yp_total = f_marg(:,l).*yp_total;
+                if sum(isinf(yp_total)) || sum(isnan(yp_total))
+                    l
+                end
+                %[fBest,~,fest,festx] = transform_wf_to_f_suppress_isnan(tempf.output(1,1,l).prest,...
+                %          tempf.output(1,1,l).prestx,al,tempf.output(1,1,l).w02est,...
+                %           tempf.output(1,1,l).w02estx,100);
+                %yp_total= fest .* yp_total;
             end
-            %[fBest,~,fest,festx] = transform_wf_to_f_suppress_isnan(tempf.output(1,1,l).prest,...
-            %          tempf.output(1,1,l).prestx,al,tempf.output(1,1,l).w02est,...
-            %           tempf.output(1,1,l).w02estx,100);
-            %yp_total= fest .* yp_total;
+        end
+        if count > 0
+            x_mean =[x_mean x_total/count];
+            y_mean = [y_mean y_total/count];
+            
+            if sum(yp_total)==0
+                yp_norm = 0;
+                ind2 = 1;
+            else
+                yp_norm = yp_total/sum(yp_total);
+                [~,ind2] = max(yp_total);
+            end
+            
+            yp_mean = [yp_mean sum(yp_norm.*x_grid')];
+            yp_mode = [yp_mode x_grid(ind2)];
+            %yp_mean = [yp_mean ypmax];
         end
     end
-    if count > 0
-        x_mean =[x_mean x_total/count];
-        y_mean = [y_mean y_total/count];
-
-        if sum(yp_total)==0
-           yp_norm = 0;
-           ind2 = 1;
-        else
-            yp_norm = yp_total/sum(yp_total);
-            [~,ind2] = max(yp_total);  
-        end
+    figure(plotind*3+3); clf; hold on;
+    plot(x,y,'.','Markersize', 3,'Color','k');
     
-        yp_mean = [yp_mean sum(yp_norm.*x_grid')];
-        yp_mode = [yp_mode x_grid(ind2)];
-        %yp_mean = [yp_mean ypmax];
+    if sample{1}(1)==4841
+        set(gca,'XTick',0:100:300,'Ytick',0:0.04:.2,'YTickLabel',[],'XTickLabel',[]); %was 'Ytick',0:0.03:.12
+        axis([15 350 0 .2]); %Was axis([15 350 0 .12]); in original submission
+    else
+        plot(x_mean,y_mean, '.', 'MarkerSize',30);
     end
+    plotind = plotind+1;
 end
 
-figure(plotind*3+3); clf; hold on; 
-plot(x,y,'.','Markersize', 3,'Color','k');
 
-if sample{1}(1)==4841
-set(gca,'XTick',0:100:300,'Ytick',0:0.04:.2,'YTickLabel',[],'XTickLabel',[]); %was 'Ytick',0:0.03:.12 
-axis([15 350 0 .2]); %Was axis([15 350 0 .12]); in original submission
-else
- plot(x_mean,y_mean, '.', 'MarkerSize',30);    
-end
-plotind = plotind+1;
+
+
 %end
 %ti = sprintf('Fret Fraction vs Intensity: boxcar range is %s',num2str(boxcar_range)); title(ti);
 %xlabel('Number of photons');

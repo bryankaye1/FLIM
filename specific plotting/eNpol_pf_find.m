@@ -43,7 +43,7 @@ for loop = 1:4
         bpol(ind) = sum(x.*y./(ab*(1+(al-1).*y)));
         tub(ind) = sum(x);
         pfm(ind) = ab;
-        %pfm_name{ind} = ab
+        pfm_name{ind} = {output(1,1,1).dataname,ab};
     end
 
     %%%%Calculate polymer amount, poly std (from fields of view) and 

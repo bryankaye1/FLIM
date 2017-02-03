@@ -45,6 +45,8 @@ oct_29 = [23355:23404,23405:23454,23455:23504];
 nov1_sp16_5frames = [23505:23515];%,23522:23534];
 nov1_sp16_10frames = [23516:23521];
 
+nov1_ngr16 = 25091:25420;
+
 nov1_ngr16_da = [23535:23545];
 nov1_bestcells = [23614:23627]; %segmented cells nsp 8, blurr =1, thresh = 0.25
 cherry_cells = [25225,25255,25315,25345,25252,25312,25302,25332];
@@ -54,7 +56,7 @@ poster_cells = [25255,25252,25266,25267];
 %fig5_control = [25081:25090];
 
 %fixed = fix_w1(8011:8067,1.8,8238);
-ivec = nov1_bestcells;%[22606:22655,22707:22755,22756: 22805]; %[jul31_donor_ran,jul31_uf1_ran,jul31_uf2_ran];
+ivec = nov1_ngr16;%[22606:22655,22707:22755,22756: 22805]; %[jul31_donor_ran,jul31_uf1_ran,jul31_uf2_ran];
 acq_time = 10;
 %%%
 show_fit=1;

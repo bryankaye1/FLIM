@@ -1,4 +1,7 @@
-function [tsm,dataname_cell] = find_filenames(cpath,base_name,tsm)
+function [tsm,dataname_cell] = find_filenames(cpath,base_name,tsm,varargin)
+
+%If varargin{1} exists, then the script will not ask you to confirm
+%filenames are correct
 
 name_list  = ls([cpath,base_name,'*']);
 if ispc
@@ -14,8 +17,10 @@ else
 end
 
 size_name_list = size(name_list);
+if length(varargin)==0
 junk = input('Check file name list then press enter if ok');
 fprintf('Continuing...\n');
+end
 
 
 if ispc

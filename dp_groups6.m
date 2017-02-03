@@ -12,26 +12,26 @@ clear;
 set_matnum = 0;%Use this to set the matnumber
 num_int_bins = 0; %Use this to create equally spaced intensity groups.
 ngr = 1;%jind*100000;
-split_matin = 64; %Set to 1 to "split" set into one group, set to >1 for number of matins you want
+split_matin = 1; %Set to 1 to "split" set into one group, set to >1 for number of matins you want
 
-tfw = 0.2;
-tbac = 0.2;
-base_name = [];
-dataname_cell = {'e1-m2-s6'};
-cpath = '/Users/bryankaye/Documents/MATLAB/data/2015-2-27/';
-int_cor = 'atto565-10um';
-data_shift_name = 'atto565-10um';%'DONOR_NORAN2_c99';%'uf1_2min_c50';The IRF can be a little offset (in time) from the data, this data is used to align/find the offset and shift the data
+tfw = 0;
+tbac = 0;
+base_name = 'DONOR1_ACC9_CELL19';
+dataname_cell = {'DONOR1_ACC9_CELL23'};
+cpath = '/Users/bryankaye/Documents/MATLAB/data/2016-11-1/';
+int_cor = 'coumarin_2e5_pdms_100sec';
+data_shift_name = 'coumarin_2e5_pdms_100sec';%'DONOR_NORAN2_c99';%'uf1_2min_c50';The IRF can be a little offset (in time) from the data, this data is used to align/find the offset and shift the data
 skip_remake_shift = 1;
 
 %This section is for parameters that are zero for time-series analysis
 tsm= 1; %%This is for concatanating images that all end in '_C#' into one large image. tsm < 100;
-segment_FLIMdata=0; blurr = 1; im_thr = .22;
+segment_FLIMdata=1; blurr = 2; im_thr = .03;
 
-w1step = .01; w1min= 1.47; w1max = 1.47; %.97 for 11-4 extract%2.11 used for cells
-w2step = .01; w2min = 3.7; w2max = 3.7; %3.62 used for cells. %3.68 used for extract
+w1step = .01; w1min= 2.11; w1max = 2.11; %.97 for 11-4 extract%2.11 used for cells
+w2step = .01; w2min = 3.62; w2max = 3.62; %3.62 used for cells. %3.68 used for extract
 
-reach = 1;
-make_FLIMage = 1;% Used for boxcar averaging FLIM data %Set to
+reach = 0;
+make_FLIMage = 0;% Used for boxcar averaging FLIM data %Set to
 combine_exposures = 0; %Used for adding exposures together
 w1vec =  [];%.25:.05:2; %Set this vector to the ADDITIONAL w1 you want to set by creating new matins. Leave empty unless you want to do a w1sweep
 
@@ -46,7 +46,7 @@ if set_matnum
 end
 
 %% Set search parameters
-fracstep = 0.0025; %.005 with w1/w2 set is 10sec per group
+fracstep = 0.001; %.005 with w1/w2 set is 10sec per group
 if w2min~=w2max
     prstep = fracstep; prmin=0; prmax = 0;
 else
@@ -71,8 +71,8 @@ for dataname_ind = 1:length(dataname_cell)
             pth_data = cpath; %file path data
             pth_wigs = cpath;%'/Users/bryankaye/Documents/MATLAB/data/2017-01-03/'; %file path wiggles
             pth_data_for_shift = cpath;
-            irfname = 'irf-1150am';
-            wigsname = 'wigs';
+            irfname = 'from matin25255';
+            wigsname = 'from matin25255';
             pth_ext = pth_wigs; %ignore this
             extname = wigsname; %IGRNORE THIS
             
@@ -105,10 +105,7 @@ for dataname_ind = 1:length(dataname_cell)
                             int_image = int_image + int_image_temp;
                             ni = ni + ni_temp;
                         end
-                    elseif segment_FLIMdata
-                        
-                        
-                        
+                    else
                         if tsm(1)>0 %Concatanates files ending in .c# 
                             ts = tsm(dataname_ind);
                         else
@@ -117,13 +114,13 @@ for dataname_ind = 1:length(dataname_cell)
                         [pmat,ni,int_image] = loadspc(tmini,tmaxi,dataname,...
                             pth_data,int_cor,cpath,ts,reach);
                     end
-%                     if segment_FLIMdata
-%                         input(1,1,1).blurr = blurr;
-%                         input(1,1,1).im_thr = im_thr;
-%                         [pmat,ni,segment_results] = segment_FLIMage(ni,pmat,blurr,im_thr); %normally set to 2 and .05
-%                     else
-%                         segment_results = 0;
-%                     end
+                    if segment_FLIMdata
+                        input(1,1,1).blurr = blurr;
+                        input(1,1,1).im_thr = im_thr;
+                        [pmat,ni,segment_results] = segment_FLIMage(ni,pmat,blurr,im_thr); %normally set to 2 and .05
+                    else
+                        segment_results = 0;
+                    end
                     if make_FLIMage
                         jmax = length(pmat);
                     elseif ngr>1
@@ -133,7 +130,7 @@ for dataname_ind = 1:length(dataname_cell)
                     elseif ngr==1
                         pmat = sum(pmat,1);
                         jmax = 1;
-                        ni = sum(pmat);
+                        ni = sum(ni); %sum(pmat)
                     end
                 end
                 

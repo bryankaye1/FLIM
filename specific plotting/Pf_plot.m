@@ -15,19 +15,9 @@ msize = 30; % Marker size
 for i = 3522:3527    
     %Load in matout files
     clear output intb ffP cintpr
-    try
-        nstr = strcat('matout',num2str(i),'.mat');
-        tempf=load(nstr,'-mat','output','prBestmat','w1Bestmat','w2Bestmat','eltime');
-    catch exception
-        try
-            nstr = strcat('Y:\Users\bkaye\cluster\matout\matout',num2str(i),'.mat');
-            tempf=load(nstr,'-mat','output','prBestmat','w1Bestmat','w2Bestmat','eltime');
-        catch
-            continue
-        end
-    end
+    [~,output,flagoutput] = load_mat_data(i,1);
     ind =ind+1;
-    output = tempf.output(:,:,:);
+    %output = tempf.output(:,:,:);
     dataname = output.dataname;
     %%Set fit paramters for FF v int over image
     ni = output(1,1,1).ni;

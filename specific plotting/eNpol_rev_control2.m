@@ -16,19 +16,8 @@ for loop = 1:length(imax)
     %%and calculate polymer amount given fit parameters
     for i = imin(loop):imax(loop)  %Load in matout files
         clear output intb ffP cintpr
-        try
-            nstr = strcat('matout\matout',num2str(i),'.mat');
-            tempf=load(nstr,'-mat','output','prBestmat','w1Bestmat','w2Bestmat','eltime');
-        catch exception
-            try
-                nstr = strcat('Y:\Users\bkaye\cluster\matout\matout',num2str(i),'.mat');
-                load(nstr,'-mat','output','prBestmat','w1Bestmat','w2Bestmat','eltime');
-            catch
-                continue
-            end
-        end
+        [~,output] = load_mat_data(i);
         ind =ind+1;
-        dataname = output.dataname;
         %%Set fit paramters for FF v int over image
         ni = output(1,1,1).ni; 
         al = output(1,1,1).w1Best./output(1,1,1).w2Best;
@@ -166,7 +155,7 @@ for i = 1:3
     %bp1(i,:) = bpy(i,:).*norm(i,:);
 end
 
-norm = x(end)/(p_norm(end));% + m_norm(end));
+norm = x(end)/(p_norm(end) + m_norm(end));
 bp1 = bpy.*norm;
 bp_err = std(bp1,0,1)/sqrt(3);
 bp2 = mean(bp1,1);

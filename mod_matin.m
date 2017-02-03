@@ -41,7 +41,11 @@ ind = 0;
 input = 1;
 for i = fn_param.load_nums%load_beg:load_end
     ind = ind+1;
+    if ispc
     [input,~,~] = load_mat_data(i,0);
+    else
+    [input,~,~] = load_mat_data(i,0,'local',1);  
+    end
     if iscell(fn_param.pass_image)
         int_image = fn_param.pass_image;
         seg_results = int_image;
@@ -102,13 +106,13 @@ for i = fn_param.load_nums%load_beg:load_end
     end
     
     if set_matnum==0
-        [MatName,SimName] = write_to_mlist;
+        [MatName,matnum] = write_to_mlist;
         set_matnum=0;
     else
-        [MatName,SimName] = write_to_mlist(set_matnum+ind-1);
+        [MatName,matnum] = write_to_mlist(set_matnum+ind-1);
     end
     if i == load_nums(1)
-        newmat_start = MatName(35:strfind(MatName,'.')-1);
+        newmat_start = num2str(matnum);%MatName(35:strfind(MatName,'.')-1);
     end
     
     save(MatName);
@@ -118,7 +122,7 @@ end
 if verbose
     fprintf('matin %s:%s was modified and saved to matin %s:%s\n',...
         num2str(load_nums(1)),num2str(load_nums(end)),...
-        newmat_start,MatName(35:strfind(MatName,'.')-1));
+        newmat_start,num2str(matnum));
 end
 end
 

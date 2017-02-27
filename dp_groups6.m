@@ -16,20 +16,22 @@ split_matin = 1; %Set to 1 to "split" set into one group, set to >1 for number o
 
 tfw = 0;
 tbac = 0;
-base_name = 'DONOR1_ACC9_CELL19';
-dataname_cell = {'DONOR1_ACC9_CELL23'};
-cpath = '/Users/bryankaye/Documents/MATLAB/data/2016-11-1/';
-int_cor = 'coumarin_2e5_pdms_100sec';
-data_shift_name = 'coumarin_2e5_pdms_100sec';%'DONOR_NORAN2_c99';%'uf1_2min_c50';The IRF can be a little offset (in time) from the data, this data is used to align/find the offset and shift the data
+base_name = [];
+dataname_cell = {'2X_R1_S3','2X_R1_S4','2X_R1_S5'}; %'2X_R1_S1',
+scan_mag = 2;
+cpath = '/Users/bryankaye/Documents/MATLAB/data/2017-02-23/';
+int_cor = 'none';
+data_shift_name = 'ATTO2X';%'DONOR_NORAN2_c99';%'uf1_2min_c50';The IRF can be a little offset (in time) from the data, this data is used to align/find the offset and shift the data
 skip_remake_shift = 1;
 
 %This section is for parameters that are zero for time-series analysis
 tsm= 1; %%This is for concatanating images that all end in '_C#' into one large image. tsm < 100;
-segment_FLIMdata=1; blurr = 2; im_thr = .03;
+segment_FLIMdata=0; blurr = 2; im_thr = .03;
 
-w1step = .01; w1min= 2.11; w1max = 2.11; %.97 for 11-4 extract%2.11 used for cells
-w2step = .01; w2min = 3.62; w2max = 3.62; %3.62 used for cells. %3.68 used for extract
+w1step = .01; w1min= 1; w1max = 1; %.97 for 11-4 extract%2.11 used for cells
+w2step = .01; w2min = 3.68; w2max = 3.68; %3.62 used for cells. %3.68 used for extract
 
+spindle_area = 1; mask_type = 'edge_distance'; 
 reach = 0;
 make_FLIMage = 0;% Used for boxcar averaging FLIM data %Set to
 combine_exposures = 0; %Used for adding exposures together
@@ -37,7 +39,7 @@ w1vec =  [];%.25:.05:2; %Set this vector to the ADDITIONAL w1 you want to set by
 
 %%Cell used for the data. A new matin will be created for each filename
 if ~isempty(base_name)
-[tsm,dataname_cell] = find_filenames(cpath,base_name,tsm);
+    [tsm,dataname_cell] = find_filenames(cpath,base_name,tsm);
 end
 %dataname_cell={'DONOR1_ACC9_CELL8'};
 if set_matnum
@@ -46,13 +48,13 @@ if set_matnum
 end
 
 %% Set search parameters
-fracstep = 0.001; %.005 with w1/w2 set is 10sec per group
+fracstep = 0.002; %.005 with w1/w2 set is 10sec per group
 if w2min~=w2max
     prstep = fracstep; prmin=0; prmax = 0;
 else
     prstep = fracstep; prmin=0; prmax = 1;
 end
-w02step = fracstep; w02min = 0; w02max = 1; 
+w02step = fracstep; w02min = 0; w02max = 1;
 thr = .01; %thr is the marginalization threshold
 
 jmax = 1;
@@ -71,21 +73,21 @@ for dataname_ind = 1:length(dataname_cell)
             pth_data = cpath; %file path data
             pth_wigs = cpath;%'/Users/bryankaye/Documents/MATLAB/data/2017-01-03/'; %file path wiggles
             pth_data_for_shift = cpath;
-            irfname = 'from matin25255';
-            wigsname = 'from matin25255';
+            irfname = 'irf';
+            wigsname = 'wigs_2017-1-3';
             pth_ext = pth_wigs; %ignore this
-            extname = wigsname; %IGRNORE THIS
+            extname = wigsname; %ignore this
             
-            shift.step = .2; shift.min = -30; shift.max = 5; %shiftstep = .2
+            shift.step = .2; shift.min = -15; shift.max = 15; %shiftstep = .2
             shift.w2step = .025; shift.w2min = 3; shift.w2max = 4; %w2step = .0025
             shift.backstep = .01; shift.backmin = .01; shift.backmax = .1;
             
             %%   Make IRF, wigs, irf shift
             sysinfo = 0; % Set to 1 if you want to force a rerun of make_irf_wig_ext. other
             make_sysinfo(sysinfo,skip_remake_shift,cpath, pth_irf, irfname, pth_wigs,...
-            wigsname, pth_ext, extname, data_shift_name, pth_data_for_shift,shift);
+                wigsname, pth_ext, extname, data_shift_name, pth_data_for_shift,shift);
             
-        %% Load in IRF, wigs
+            %% Load in IRF, wigs
             load(strcat(pth_irf,'current.mat'));
             jind =0;
             while jind < jmax %jind is pixel group# jmax is the total number of pixel groups
@@ -93,33 +95,47 @@ for dataname_ind = 1:length(dataname_cell)
                 %% This section is where data is saved
                 %This sub-section saved FLIMages and all pixel groups.
                 if jind==1
-                    if combine_exposures > 0
-                        pmat = 0;
-                        int_image = 0;
-                        ni = 0;
-                        for ce_ind = 1:combine_exposures
-                            dataname_comexp = append_timeseries_names(dataname,ce_ind,combine_exposures);
-                            [pmat_temp,ni_temp,int_image_temp] = loadspc(tmini,tmaxi,dataname_comexp,...
-                                pth_data,int_cor,cpath,0,reach);
-                            pmat = pmat + pmat_temp;
-                            int_image = int_image + int_image_temp;
-                            ni = ni + ni_temp;
-                        end
+                    if spindle_area
+                        [pmat,ni,segment_results] = spindle_area_reg_seg(cpath,...
+                            dataname_cell{dataname_ind},tmini,tmaxi,int_cor,...
+                            cpath,mask_type,scan_mag);
+                        jmax = length(ni);
+                        ngr = -1;
+                        make_FLIMage = 0;
+                        int_image = 'seg_results contain int_image';
+                        tsm = 0;
+                        %add input.distance to give distance coordinates of
+                        %each intensity/FLIM group
                     else
-                        if tsm(1)>0 %Concatanates files ending in .c# 
-                            ts = tsm(dataname_ind);
+                        
+                        if combine_exposures > 0
+                            pmat = 0;
+                            int_image = 0;
+                            ni = 0;
+                            for ce_ind = 1:combine_exposures
+                                dataname_comexp = append_timeseries_names(dataname,ce_ind,combine_exposures);
+                                [pmat_temp,ni_temp,int_image_temp] = loadspc(tmini,tmaxi,dataname_comexp,...
+                                    pth_data,int_cor,cpath,0,reach);
+                                pmat = pmat + pmat_temp;
+                                int_image = int_image + int_image_temp;
+                                ni = ni + ni_temp;
+                            end
                         else
-                            ts = 0;
+                            if tsm(1)>0 %Concatanates files ending in .c#
+                                ts = tsm(dataname_ind);
+                            else
+                                ts = 0;
+                            end
+                            [pmat,ni,int_image] = loadspc(tmini,tmaxi,dataname,...
+                                pth_data,int_cor,cpath,ts,reach);
                         end
-                        [pmat,ni,int_image] = loadspc(tmini,tmaxi,dataname,...
-                            pth_data,int_cor,cpath,ts,reach);
-                    end
-                    if segment_FLIMdata
-                        input(1,1,1).blurr = blurr;
-                        input(1,1,1).im_thr = im_thr;
-                        [pmat,ni,segment_results] = segment_FLIMage(ni,pmat,blurr,im_thr); %normally set to 2 and .05
-                    else
-                        segment_results = 0;
+                        if segment_FLIMdata
+                            input(1,1,1).blurr = blurr;
+                            input(1,1,1).im_thr = im_thr;
+                            [pmat,ni,segment_results] = segment_FLIMage(ni,pmat,blurr,im_thr); %normally set to 2 and .05
+                        else
+                            segment_results = 0;
+                        end
                     end
                     if make_FLIMage
                         jmax = length(pmat);
@@ -131,6 +147,9 @@ for dataname_ind = 1:length(dataname_cell)
                         pmat = sum(pmat,1);
                         jmax = 1;
                         ni = sum(ni); %sum(pmat)
+                    elseif ngr==-1
+                        %This is used in spindle_area. jmax is set in the
+                        %if condition. 
                     end
                 end
                 
@@ -149,11 +168,12 @@ for dataname_ind = 1:length(dataname_cell)
                     w02step,w02min,w02max,fracstep,shift,shiftb,dataname,pth_data,irfname,pth_irf,...
                     data_shift_name,pth_data_for_shift,ngr,ni,thr,bneed,pulsewb,tmini,tmaxi,...
                     ext,wigsb,pth_wigs,wigsname,pth_ext,extname,comment,tbac,tfw,reach,...
-                    combine_exposures,tsm,cindex,expt,jind,input);
+                    combine_exposures,tsm,cindex,expt,jind,spindle_area,input);
             end
         end
     end
     %%
+ beep;
     if split_matin <2
         [set_matnum] = save_matin(input,int_image,segment_results,set_matnum,dataname,w1vec);
         dataname_matnum{end+1} = {dataname, set_matnum-1};
@@ -161,7 +181,7 @@ for dataname_ind = 1:length(dataname_cell)
         [set_matnum] = split_input(input,int_image,segment_results,set_matnum,dataname,split_matin);
     end
 end
-%%
+
 [start_nums,end_nums,tseries_names] = find_series(dataname_matnum);
 if ~isempty(start_nums)
     for i = 1:length(tseries_names)

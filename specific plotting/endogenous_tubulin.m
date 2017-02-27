@@ -3,7 +3,7 @@
 %(heuristically) account for xvalue uncertainty
 
 %close all;
-clear;
+clear; close all;
 color3 = [.6,.6,.6]; %Grey for fit lines
 msize = 30; %size of marker
 jan10 = [27226,27228:27231,27250,27232,27233,27227,27251,27234:27237];
@@ -20,10 +20,10 @@ for i = ivec
     ind = ind + 1;
     %Load in data and images
     [~,output,flagoutput] = load_mat_data(i,1);
-
     %%Get FRET fraction and intensity. For now we make x(j)=ni
     ni = output(1,1,1).ni;
     al = output(1,1,1).w1Best./output(1,1,1).w2Best;
+    al = .6;
     for j = 1:length(ni)
         x(j) = ni(j)*(sum(output(1,1,j).prest'.*output(1,1,j).prestx)...
         +sum(output(1,1,j).w02est'.*output(1,1,j).w02estx));
@@ -54,7 +54,9 @@ for i = ivec
     stdmat(ind,:) = stdpr;
     thr_pho{ind} = find(xmat(ind,:)<10000);
     ti{ind} = strrep(output(1,1,1).dataname,'.sdt','');
-    
+    if ind ==4
+        %bryan =1;  
+    end
 end
 % for j = 1:ind
 %     figure(j); clf;
@@ -74,7 +76,7 @@ end
 
 
 %%
-figure(ind+1); clf; hold all;
+figure(1); clf; hold all;
 % ax = gca();
 % x = (0:length(pfm(1:4))-1);
 % f = fit(x',pfm(1:4)','poly1','Weights',(1./pfstd(1:4)).^2'); %%Linear fit w/ wieghts
@@ -82,25 +84,28 @@ figure(ind+1); clf; hold all;
 % plot(x,fitvec,'--','Color',color3);
 % plot(x,pfm(1:4),'.','MarkerSize',msize,'Color','k');
 
-x = (0:length(pfm)-1);
-f = fit(x',pfm','poly1','Weights',(1./pfstd).^2'); %%Linear fit w/ wieghts
+xvals_linear = 0:5;
+pf2fit = pfm(1:6);
+pfstd2fit = pfstd(1:6);
+x = xvals_linear;
+f = fit(x',pf2fit','poly1','Weights',(1./pfstd2fit).^2'); %%Linear fit w/ wieghts
 fitvec = f.p1.*x+f.p2; %Line with best fit parameters from above
 plot(x,fitvec,'--','Color',color3);
-plot(x,pfm,'.','MarkerSize',msize,'Color','k');
+plot(x,pf2fit,'.','MarkerSize',msize,'Color','k');
 
 xlabel('sample number');
 ylabel('Pf');
 
 %%
-m = 3*0.074638*10;
+%m = 3*0.074638*10;
 b = f.p2;
-
+m = f.p1;
 
 a = 2*16.8/(140+2+1.75);
 d = 1.75*25/(140+2+1.75);
 ul_stock = 30;
 u_vol = 0:4;
-u = ul_stock.*u_vol./(21+u_vol);
+u = ul_stock.*u_vol./(20+u_vol);
 Pf = pfm(end-4:end);
 
 err = pfstd(end-4:end);
@@ -113,11 +118,20 @@ fitmod = @(m,e,x)(m*a./(a+d+x+e) +b );
 fit_e = fit((x)',y',fitmod,'StartPoint',[0.074638/10,1.6],'Weights',...
     (1./(err)).^2','Lower',[0,0],'Upper',[100,50]);
 
+%fitmod = @(e,x)(m*a./(a+d+x+e) +b );
+%fit_e = fit((x)',y',fitmod,'StartPoint',1.6,'Weights',...
+%    (1./(err)).^2','Lower',0,'Upper',5);
+
+
 figure(2);
 plot(x,y,'.','MarkerSize',msize,'Color','k');
 hold on; 
 xmodel = 0:.01:max(x);
 plot(xmodel,fitmod(fit_e.m,fit_e.e,xmodel),'--','Color',color3);
+%plot(xmodel,fitmod(fit_e.e,xmodel),'--','Color',color3);
+
+
+
 
 
 %e_vec = (-a*b -b*d -a*m +a*Pf +d*Pf -b*u +Pf.*u)./(b -Pf);

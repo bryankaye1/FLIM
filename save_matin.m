@@ -1,5 +1,6 @@
 
 function [set_matnum] = save_matin(input_in,int_image,seg_results,set_matnum,dataname,w1vec)
+warning('off','MATLAB:Figure:FigureSavedToMATFile');
 input = 1;
 input = input_in;
 [MatName,matnum] = write_to_mlist(set_matnum);

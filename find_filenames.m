@@ -41,6 +41,20 @@ if tsm>0
         dataname_num{end+1} = {dataname_cell{i}, i};
     end
     [start_nums,end_nums,dataname_cell] = find_series(dataname_num);
+    base_filenames_newline = '';
+    base_filenames_comma = '';
+    for i = 1:length(dataname_cell)
+        base_filenames_newline = sprintf('%s %s \n',base_filenames_newline,dataname_cell{i});
+        base_filenames_comma = sprintf('%s''%s'',',base_filenames_comma,dataname_cell{i});
+    end
     tsm = end_nums-start_nums+1;
+    %For copying the filenames for pasting directly into code
+    base_names_pth ='/Users/bryankaye/Documents/MATLAB/FLIM/combined_datanames.txt';
+    dlmwrite(base_names_pth,[base_filenames_newline,base_filenames_comma],'delimiter','');
+    system(['open -a TextWrangler ' base_names_pth]);
+    bryan = 1;
+    
+    
+    
 end
 end

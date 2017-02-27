@@ -1,4 +1,4 @@
-function [int_image] = spc2image(tmini,tmaxi,file_name,pth_sdt,FOV_fn,FOV_pth,tsm,reach)
+function [int_image,FLIMdata] = spc2FLIMdata(tmini,tmaxi,file_name,pth_sdt,FOV_fn,FOV_pth,tsm,reach)
 %Loads spc and returns linearized FLIMage intensity corrected photon counts
 %It can return an intensity image if varargin{1} is 'save_int_image'
 
@@ -23,6 +23,8 @@ for ts=1:tsm
     end
     
     ld = sdt_to_vector(pth_sdt,file_name2);
+    FLIMdata_temp = shiftdim(ld,1);
+    FLIMdata = FLIMdata_temp(:,:,tmini:tmaxi);
     %datat(:,:,1+128*(ts-1):128*ts) = ld(tmini:tmaxi,:,:);
     %datat = ld(tmini:tmaxi,:,:);
     nph = squeeze(sum(ld(tmini:tmaxi,:,:),1));

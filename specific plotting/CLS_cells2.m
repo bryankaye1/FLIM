@@ -3,9 +3,11 @@ clear;
 %close all;
 
 addpath(fileparts(pwd));
-plot_on = 0;
+plot_on = 1;
 
-da_cells = [25255,25252,25302,25284,25163,25280]; %These segmentations did not look so great: 25302,25395,
+da_cells = [25255,25252,25302,25284,25163,25280]; 
+%These segmentations did not look so great: 25395. 25302 was barely
+%acceptable.
 d_cells = [25265:25270];
 
 
@@ -34,11 +36,11 @@ for i = da_cells
     dataname{ind} = output(1,1,1).dataname;
     al = output(1,1,1).w1min/output(1,1,1).w2min;
     %%Get FRET fraction and photons from FRETters
-    for k = 1:length(output)
-    x_group(k) = sum(output(1,1,k).datahis/acq_number(ind));
-    end
-    x_spindle(ind) = sum(x_group);
-    x_cell_simple(ind) = sum(wholecell_in(1,1,1).datahis)/acq_number(ind);
+%     for k = 1:length(output)
+%     x_group(k) = sum(output(1,1,k).datahis/acq_number(ind));
+%     end
+%     x_spindle(ind) = sum(x_group);
+%    x_cell_simple(ind) = sum(wholecell_in(1,1,1).datahis)/acq_number(ind);
     [x,y,stdpr] = getFF_int(output,al,200000);   
     [x_cell_temp,y_cell,stdpr_cell] = getFF_int(wholecell_out,al,200000);
     
@@ -47,7 +49,7 @@ for i = da_cells
     
     
     x = x / ( (pixels_spindle(ind)/8) * acq_number(ind) );
-    x_cell(ind) = x_cell_temp / ( (pixels_spindle(ind)/8) * acq_number(ind) );
+    x_cell(ind) = x_cell_temp / ( pixels_cell(ind) * acq_number(ind) );
     
         figure(ind); clf; subplot(1,2,1); imshow(whole_cell.seg_results{4},...
             'InitialMagnification','fit');
@@ -55,7 +57,7 @@ for i = da_cells
             'InitialMagnification','fit');
     tub_con = 20;
     F(ind) = wholecell_out.prBest;
-    epsilon(ind) = x_cell(ind) / (tub_con*pixels_cell(ind)*(1-F(ind)+al*F(ind)));   
+    epsilon(ind) = x_cell(ind) / (tub_con*(1-F(ind)+al*F(ind)));   
     [pfm(ind),nmon(ind),fresult] = fit_pf_nm(x,y,stdpr,al);
 
     if any(i==d_cells)
@@ -63,8 +65,9 @@ for i = da_cells
         nmon(ind) = x_int(ind);
     end
     [pol(ind),~,~,polfrac(ind)] = ff2pol(x,y,stdpr,al,pfm(ind),nmon(ind));
-    pol_con(ind) = (pol(ind)/epsilon(ind))/pixels_spindle(ind);
-    
+    pol_con(ind) = pol(ind)/(epsilon(ind)*length(output));
+    %we divide by length of output since pol is a concentration and not a
+    %total (you dont sum concentrations to get concentrations)
     
     ci68 = confint(fresult,.682);
     ci95 = confint(fresult,.954);
@@ -75,8 +78,7 @@ for i = da_cells
     nmonci95(ind) = (ci95(2,2)-ci95(1,2))/2;
     
     
-    xintmat{ind} = x; %xintmat is not x!!!
-    xmat{ind} = x;
+    xmat{ind} = x; %We divide by 8 because we want 
     ymat{ind} = y;
     stdmat{ind} = stdpr;
     
@@ -90,12 +92,12 @@ for i = da_cells
     
     pf = pfm(ind);
     polfrac2(ind) = sum( y ./ (pf-y) ) / sum( pf ./ (pf-y ) );
-    xmax = max(xintmat{ind})*1.3;
+    xmax = max(xmat{ind})*1.3;
     ymax = ymat{ind}(end) + stdmat{ind}(end)+.2;
     if plot_on
         figure(ind); clf; hold on;
-        errorbar(xintmat{ind},ymat{ind},stdmat{ind},'.');
-        errorbar(xintmat{ind}(thr_pho{ind}),ymat{ind}(thr_pho{ind}),...
+        errorbar(xmat{ind},ymat{ind},stdmat{ind},'.');
+        errorbar(xmat{ind}(thr_pho{ind}),ymat{ind}(thr_pho{ind}),...
             stdmat{ind}(thr_pho{ind}),'.','Color','red');
         xmodel = 0:xmax*.001:xmax;
         plot(xmodel,pf_nm_pred(al,pfm(ind),nmon(ind),xmodel),'--','Color',...

@@ -127,10 +127,10 @@ axis([-0.25 5.5 0 40]);
 ax.XTick = 0:2.5:5;
 ax.YTick= 0:10:40;
 
-x = (0:length(pfm)-1)*(1.6/5);
+x = (0:length(pfm)-1)*(1.6/5); %concentration of acc in micromolar
 f = fit(x',pfm','poly1','Weights',(1./pfstd).^2'); %%Linear fit w/ wieghts
-egg_tub = (18+5+1.6);
-nearby_fret_err = confint(f,.954)*egg_tub;
-nearby_fret = f.p1*egg_tub;
+egg_tub = (18+5+1.6); %total tubulin concentration in micromolar
+nearby_fret_err = confint(f,.954)*egg_tub; 
+nearby_fret = f.p1*egg_tub; %Pfi = m * a/total +b = (m/total)*ai + b. thus f.p1 is m/total (total =egg)
 fprintf('FRETable neighbors are %f +/-%f \n',nearby_fret,nearby_fret-nearby_fret_err(1));
 fprintf('Pf vs acc fit: slope is %f and offset is %f\n',f.p1,f.p2);

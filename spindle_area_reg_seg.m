@@ -2,7 +2,7 @@
 %Written by Olivia Stiehl and Bryan Kaye
 
 function [FLIMgroups,int_groups,reg_seg_plots] = spindle_area_reg_seg(data_path,data_name,...
-    tmini,tmaxi,FOV_fn,FOV_pth,mask_type,scan_mag)
+    tmini,tmaxi,FOV_fn,FOV_pth,mask_type,scan_mag,pixel_bin_width)
 
 
 sim_im = 0;
@@ -38,10 +38,10 @@ if strcmp(mask_type,'ellipsoid')
 [int_masks,mask_distance,mask_angle_rot,] = ellips_seg(image_stack,...
     pixel_length,scan_mag,rot_method);
 elseif strcmp(mask_type, 'edge_distance')
-    [int_masks,mask_distance,mask_angle_rot] = dist_seg(image_stack,pixel_length);
+    [int_masks,mask_distance,mask_angle_rot] = dist_seg(int_image0,image_stack,...
+        pixel_length,pixel_bin_width);
 else
-    input('ERROR: NO MASK TYPE SELECTED');
-    
+    input('ERROR: NO MASK TYPE SELECTED'); 
 end
 
 [FLIM_stack] = transform_FLIMage(FLIMages,registration_vectors,...
@@ -55,7 +55,7 @@ for k = 1:size(int_masks,3)
     plot_FLIM_int(k) = sum(FLIMgroups(k,:));
     
     intseg{k} = int_masks(:,:,k).* imrotate(image_stack,-mask_angle_rot,rot_method,'crop');
-    int_groups(k) = squeeze(sum(sum(intseg{k}))); %3rd dimension is FLIM histogram
+    int_groups(k) = squeeze(sum(sum(intseg{k})));
 end
 
 %%
@@ -68,6 +68,7 @@ middle_image = int_image0{round(end/2)};
 last_image = int_image0{end};
 input_params.mask_type = mask_type;
 input_params.scan_mag = scan_mag;
+input_params.pixel_bin_width = pixel_bin_width;
 reg_seg_plots.first_image = first_image;
 reg_seg_plots.middle_image = middle_image;
 reg_seg_plots.last_image = last_image;

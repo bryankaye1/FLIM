@@ -8,21 +8,23 @@
 %combine_exposures_FLIMage: number of FLIM data sets (exposures) you want
 %to combine into one FLIM data.
 clear;
-
 set_matnum = 0;%Use this to set the matnumber
 num_int_bins = 0; %Use this to create equally spaced intensity groups.
-ngr = 1;%jind*100000;
+ngr = 0;%jind*100000;
 split_matin = 1; %Set to 1 to "split" set into one group, set to >1 for number of matins you want
 
 tfw = 0;
 tbac = 0;
 base_name = [];
-dataname_cell = {'2X_R1_S3','2X_R1_S4','2X_R1_S5'}; %'2X_R1_S1',
-scan_mag = 2;
-cpath = '/Users/bryankaye/Documents/MATLAB/data/2017-02-23/';
-int_cor = 'none';
-data_shift_name = 'ATTO2X';%'DONOR_NORAN2_c99';%'uf1_2min_c50';The IRF can be a little offset (in time) from the data, this data is used to align/find the offset and shift the data
+dataname_cell = {'DA_ROUND2_1P2ACC_LOINT','DA_ROUND2_1p2acc','Da_round2',...
+    'DA_ROUND2_longer','DA_ROUND2_spindle2','DA_ROUND2_SPINDLE2_hiint',...
+    'DA_ROUND2_SPINDLE3','Donor_r1'};
+scan_mag = 8;  bin_width = 0.5;
+cpath = '/Users/bryankaye/Documents/MATLAB/data/2017-01-26/';
+int_cor = 'ATTO8X';
+data_shift_name = 'M0';%'DONOR_NORAN2_c99';%'uf1_2min_c50';The IRF can be a little offset (in time) from the data, this data is used to align/find the offset and shift the data
 skip_remake_shift = 1;
+
 
 %This section is for parameters that are zero for time-series analysis
 tsm= 1; %%This is for concatanating images that all end in '_C#' into one large image. tsm < 100;
@@ -31,7 +33,7 @@ segment_FLIMdata=0; blurr = 2; im_thr = .03;
 w1step = .01; w1min= 1; w1max = 1; %.97 for 11-4 extract%2.11 used for cells
 w2step = .01; w2min = 3.68; w2max = 3.68; %3.62 used for cells. %3.68 used for extract
 
-spindle_area = 1; mask_type = 'edge_distance'; 
+spindle_area = 1; mask_type = 'edge_distance';
 reach = 0;
 make_FLIMage = 0;% Used for boxcar averaging FLIM data %Set to
 combine_exposures = 0; %Used for adding exposures together
@@ -45,6 +47,11 @@ end
 if set_matnum
     junk = input('You are setting the matnum. Careful...Press enter to continue\n'); %#ok<*UNRCH>
     fprintf('ok. script running:\n');
+end
+
+if ~(~segment_FLIMdata || (dataname_cell{1}(1)==int_cor(end-1) && dataname_cell{1}(1) == num2str(floor(scan_mag))))
+    fprintf('Check the dataname / scan mag / int correction\n');
+    pause;
 end
 
 %% Set search parameters
@@ -98,7 +105,7 @@ for dataname_ind = 1:length(dataname_cell)
                     if spindle_area
                         [pmat,ni,segment_results] = spindle_area_reg_seg(cpath,...
                             dataname_cell{dataname_ind},tmini,tmaxi,int_cor,...
-                            cpath,mask_type,scan_mag);
+                            cpath,mask_type,scan_mag, bin_width);
                         jmax = length(ni);
                         ngr = -1;
                         make_FLIMage = 0;
@@ -168,12 +175,14 @@ for dataname_ind = 1:length(dataname_cell)
                     w02step,w02min,w02max,fracstep,shift,shiftb,dataname,pth_data,irfname,pth_irf,...
                     data_shift_name,pth_data_for_shift,ngr,ni,thr,bneed,pulsewb,tmini,tmaxi,...
                     ext,wigsb,pth_wigs,wigsname,pth_ext,extname,comment,tbac,tfw,reach,...
-                    combine_exposures,tsm,cindex,expt,jind,spindle_area,input);
+                    combine_exposures,tsm,cindex,expt,jind,spindle_area,int_cor,input); %save intensity correction filename/path!
             end
         end
     end
     %%
- beep;
+ load handel
+sound(y,Fs);
+%pause;
     if split_matin <2
         [set_matnum] = save_matin(input,int_image,segment_results,set_matnum,dataname,w1vec);
         dataname_matnum{end+1} = {dataname, set_matnum-1};
@@ -196,6 +205,9 @@ if ~isempty(start_nums)
     fprintf( '%3.0f:%3.0f', start_nums(end), end_nums(end));
     fprintf('];\n');
 end
+
+load handel
+sound(y,Fs);
 
 % dataname_cell ={'ACC_ONLY_CELL1','ACC_ONLY_CELL2',...
 %     '1DONOR_3ACC_CELL1','1DONOR_3ACC_CELL2','1DONOR_3ACC_CELL3_interphase',...

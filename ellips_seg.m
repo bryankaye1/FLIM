@@ -3,8 +3,10 @@ function [masks,mask_distance,angle_offset] = ellips_seg(int_image0,...
 
 mean_im0 = mean2(int_image0);
 std_im0 = std2(int_image0);
-thresh = mean_im0+(4/scan_mag)*std_im0;%make the mask a seperate function so 
-%changes in registration and semgentation are gauraenteed to be the same
+thresh = mean_im0+(4/scan_mag)*std_im0;%to do: use a function to make the mask so 
+%changes in registration and segmentation are gauraenteed to be the same
+%IMPLEMENT make_masks if you want to use this function
+
 thr_mask = int_image0>thresh;
 
 %apply erosion and then dilation
@@ -76,8 +78,8 @@ for k=kvec
     %k*b/a
     a = mi0_props.MinorAxisLength/2;
     b = mi0_props.MajorAxisLength/2;
-    new_a(i) = mi0_props.MinorAxisLength/2 +k;
-    new_b(i) = (b + k*b/a);
+    new_a(i) = mi0_props.MinorAxisLength/2 + k;
+    new_b(i) = mi0_props.MinorAxisLength/2 + k;
     
     %%% only allow for ellipses that fit the image:
     if new_b(i) > 64

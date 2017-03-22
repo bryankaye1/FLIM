@@ -3,7 +3,7 @@
 %(heuristically) account for xvalue uncertainty
 
 %close all;
-clear; close all;
+clear; %close all;
 color3 = [.6,.6,.6]; %Grey for fit lines
 msize = 30; %size of marker
 jan10 = [27226,27228:27231,27250,27232,27233,27227,27251,27234:27237];
@@ -23,7 +23,7 @@ for i = ivec
     %%Get FRET fraction and intensity. For now we make x(j)=ni
     ni = output(1,1,1).ni;
     al = output(1,1,1).w1Best./output(1,1,1).w2Best;
-    al = .6;
+    %al = .45;
     for j = 1:length(ni)
         x(j) = ni(j)*(sum(output(1,1,j).prest'.*output(1,1,j).prestx)...
         +sum(output(1,1,j).w02est'.*output(1,1,j).w02estx));
@@ -76,7 +76,7 @@ end
 
 
 %%
-figure(1); clf; hold all;
+figure(4); clf; hold all;
 % ax = gca();
 % x = (0:length(pfm(1:4))-1);
 % f = fit(x',pfm(1:4)','poly1','Weights',(1./pfstd(1:4)).^2'); %%Linear fit w/ wieghts
@@ -99,7 +99,7 @@ ylabel('Pf');
 %%
 %m = 3*0.074638*10;
 b = f.p2;
-m = f.p1;
+%m = f.p1;
 
 a = 2*16.8/(140+2+1.75);
 d = 1.75*25/(140+2+1.75);
@@ -123,10 +123,11 @@ fit_e = fit((x)',y',fitmod,'StartPoint',[0.074638/10,1.6],'Weights',...
 %    (1./(err)).^2','Lower',0,'Upper',5);
 
 
-figure(2);
-plot(x,y,'.','MarkerSize',msize,'Color','k');
+figure(5);
+%plot(x,y,'.','MarkerSize',msize,'Color','k');
+errorbar(x,y,pfstd(end-4:end),'bo');
 hold on; 
-xmodel = 0:.01:max(x);
+xmodel = 0:.01:max(x); 
 plot(xmodel,fitmod(fit_e.m,fit_e.e,xmodel),'--','Color',color3);
 %plot(xmodel,fitmod(fit_e.e,xmodel),'--','Color',color3);
 

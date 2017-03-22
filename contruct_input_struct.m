@@ -3,7 +3,7 @@ function [input]  = contruct_input_struct(split_matin,jmax,exptmax,...
     w02step,w02min,w02max,fracstep,shift,shiftb,dataname,pth_data,irfname,pth_irf,...
     data_shift_name,pth_data_for_shift,ngr,ni,thr,bneed,pulsewb,tmini,tmaxi,...
     ext,wigsb,pth_wigs,wigsname,pth_ext,extname,comment,tbac,tfw,reach,...
-    combine_exposures,tsm,cindex,expt,jind,spindle_area,input)
+    combine_exposures,tsm,cindex,expt,jind,spindle_area,int_cor,input)
 
 if split_matin==0
     split_matin=1;
@@ -71,6 +71,7 @@ if split_matin>1 || (cindex==1 && (expt==1 && jind==1))
     input(cindex,expt,jind).combine_exposures_FLIMage = combine_exposures;
     input(cindex,expt,jind).tsm = tsm;
     input(cindex,expt,jind).spindle_area = spindle_area;
+    input(cindex,expt,jind).int_cor_name = int_cor;
 end
 end
 

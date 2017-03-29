@@ -1,5 +1,5 @@
-function [masks_outward,mask_distance_outward,angle_offset] = dist_seg(images,image_stack,...
-    pixel_length,bin_width)
+function [masks,mask_distance,angle_offset] = dist_seg(images,image_stack,...
+    pixel_length,bin_width,scan_mag)
 
 %%
 % mean_im0 = mean2(image_stack);
@@ -17,7 +17,7 @@ function [masks_outward,mask_distance_outward,angle_offset] = dist_seg(images,im
 
 
 
-[mi0] = make_masks(image_stack,1,2,1:3,images);
+[mi0] = make_masks(image_stack,1,1.5,1:3,images);
 s = regionprops(mi0,'centroid','MajorAxisLength','MinorAxisLength');
 
 if length(s)~=1
@@ -25,12 +25,32 @@ if length(s)~=1
     s = regionprops(mi0,'centroid','MajorAxisLength','MinorAxisLength');
 end
 
+if length(s)~=1
+    [mi0] = make_masks(imgaussfilt(image_stack,2),floor(scan_mag),1.5,1:3);
+    if scan_mag==2
+        mi0(90:128,:)=0;
+        mi0(1:30,:)=0;
+        mi0(:,90:128)=0;
+        mi0(:,1:30)=0;
+    end
+    s = regionprops(mi0,'centroid','MajorAxisLength','MinorAxisLength');
+end
 
-mi0_props = regionprops(mi0,'centroid','MajorAxisLength',...
-    'MinorAxisLength','Orientation');
-if length(mi0_props)>1
+if length(s)~=1
+    [mi0] = make_masks(imgaussfilt(image_stack,2),floor(scan_mag),2,1:3);
+    if scan_mag==2
+        mi0(90:128,:)=0;
+        mi0(1:30,:)=0;
+        mi0(:,90:128)=0;
+        mi0(:,1:30)=0;
+    end
+    s = regionprops(mi0,'centroid','MajorAxisLength','MinorAxisLength');
+end
+
+if length(s)~=1
     fprintf('multiple regions!!! change threshold');
-    dbstop in dist_seg at 29;
+    dbstop in dist_seg at 42;
+    pause;
 end
 
 % figure(5); clf; imshow(mat2gray(mi0.*image_stack),'InitialMagnification','fit');
@@ -82,8 +102,8 @@ end
 masks_inward = masks_inward(:,:,2:end);
 
 
-masks = cat(3,masks_inward,masks_outward);
-mask_distance = [mask_distance_inward , mask_distance_outward];
+masks = cat(3,bwperim(mi0),masks_inward,masks_outward);
+mask_distance = [0,mask_distance_inward(2:end), mask_distance_outward(2:end)];
 
 %%
 figure(3); clf;

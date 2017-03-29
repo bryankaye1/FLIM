@@ -10,21 +10,27 @@
 clear;
 set_matnum = 0;%Use this to set the matnumber
 num_int_bins = 0; %Use this to create equally spaced intensity groups.
-ngr = 0;%jind*100000;
+ngr = 64;%jind*100000;
 split_matin = 1; %Set to 1 to "split" set into one group, set to >1 for number of matins you want
 
 tfw = 0;
 tbac = 0;
-base_name = [];
-dataname_cell = {'DA_ROUND2_1P2ACC_LOINT','DA_ROUND2_1p2acc','Da_round2',...
-    'DA_ROUND2_longer','DA_ROUND2_spindle2','DA_ROUND2_SPINDLE2_hiint',...
-    'DA_ROUND2_SPINDLE3','Donor_r1'};
-scan_mag = 8;  bin_width = 0.5;
-cpath = '/Users/bryankaye/Documents/MATLAB/data/2017-01-26/';
+base_name = ['2X'];
+dataname_cell = {};%{'12X_R1_S1','12X_R1_S2','12X_R1_S3_HI_INT','12X_R1_S5_DONOR'};
+cpath = '/Users/bryankaye/Documents/MATLAB/data/2017-02-23/';
+scan_mag = 2;  
+if scan_mag==8
+bin_width = 0.5;
 int_cor = 'ATTO8X';
-data_shift_name = 'M0';%'DONOR_NORAN2_c99';%'uf1_2min_c50';The IRF can be a little offset (in time) from the data, this data is used to align/find the offset and shift the data
+elseif scan_mag==12.8
+bin_width = 0.33;
+int_cor = 'ATTO12X';
+elseif scan_mag==2
+bin_width = 2;
+int_cor = 'ATTO2X';
+end
+data_shift_name = 'CURRENT.MAT';%'DONOR_NORAN2_c99';%'uf1_2min_c50';The IRF can be a little offset (in time) from the data, this data is used to align/find the offset and shift the data
 skip_remake_shift = 1;
-
 
 %This section is for parameters that are zero for time-series analysis
 tsm= 1; %%This is for concatanating images that all end in '_C#' into one large image. tsm < 100;
@@ -33,9 +39,8 @@ segment_FLIMdata=0; blurr = 2; im_thr = .03;
 w1step = .01; w1min= 1; w1max = 1; %.97 for 11-4 extract%2.11 used for cells
 w2step = .01; w2min = 3.68; w2max = 3.68; %3.62 used for cells. %3.68 used for extract
 
-spindle_area = 1; mask_type = 'edge_distance';
-reach = 0;
-make_FLIMage = 0;% Used for boxcar averaging FLIM data %Set to
+spindle_area = 0; mask_type = 'edge_distance';
+make_FLIMage = 0; reach = 0;% Used for boxcar averaging FLIM data %Set to
 combine_exposures = 0; %Used for adding exposures together
 w1vec =  [];%.25:.05:2; %Set this vector to the ADDITIONAL w1 you want to set by creating new matins. Leave empty unless you want to do a w1sweep
 
@@ -49,7 +54,9 @@ if set_matnum
     fprintf('ok. script running:\n');
 end
 
-if ~(~segment_FLIMdata || (dataname_cell{1}(1)==int_cor(end-1) && dataname_cell{1}(1) == num2str(floor(scan_mag))))
+
+if spindle_area && ~((dataname_cell{1}(1)==int_cor(end-1) &&...
+        dataname_cell{1}(1) == num2str(floor(scan_mag))))
     fprintf('Check the dataname / scan mag / int correction\n');
     pause;
 end
@@ -113,8 +120,20 @@ for dataname_ind = 1:length(dataname_cell)
                         tsm = 0;
                         %add input.distance to give distance coordinates of
                         %each intensity/FLIM group
-                    else
+                    elseif make_FLIMage
+                    [pmat,ni,segment_results] = register_FLIMages(cpath,...
+                            dataname_cell{dataname_ind},tmini,tmaxi,...
+                            int_cor,cpath,scan_mag);
                         
+                    [pmat] = boxcar_averager_FLIM(pmat,reach);
+                    [ipmat,jpmat,kpmat] =size(pmat);
+                    pmat = reshape(pmat,ipmat*jpmat,kpmat); 
+                      
+                    [ni] = boxcar_averager_int(ni,reach);
+                    ngr = -1;
+                    int_image = 'seg_results contain int_image';
+                    tsm = 0;
+                    else
                         if combine_exposures > 0
                             pmat = 0;
                             int_image = 0;
@@ -180,8 +199,7 @@ for dataname_ind = 1:length(dataname_cell)
         end
     end
     %%
- load handel
-sound(y,Fs);
+
 %pause;
     if split_matin <2
         [set_matnum] = save_matin(input,int_image,segment_results,set_matnum,dataname,w1vec);
@@ -206,8 +224,8 @@ if ~isempty(start_nums)
     fprintf('];\n');
 end
 
-load handel
-sound(y,Fs);
+% load handel
+% sound(y,Fs);
 
 % dataname_cell ={'ACC_ONLY_CELL1','ACC_ONLY_CELL2',...
 %     '1DONOR_3ACC_CELL1','1DONOR_3ACC_CELL2','1DONOR_3ACC_CELL3_interphase',...

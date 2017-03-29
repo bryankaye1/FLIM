@@ -1,10 +1,11 @@
 %%Used to plot polymer FF vs pixel group for spindle area FRET fraction
 %%measurements.
+
 clear;
-ivec = 28348:28352;%28330:28332; %
+ivec = 28519:28524;%28330:28332; %
 ind = 0;
 average_spindles = 0;
-maxlen = 20;
+
 
 for i = ivec
     clear x y distance stdpr
@@ -17,6 +18,7 @@ for i = ivec
     ni = output(1,1,1).ni;
     al = output(1,1,1).w1Best./output(1,1,1).w2Best;
 
+  %  figure(ind+10); imshow(mat2gray(seg_results.image_stack));
     %%Get FRET fraction (fluoro population) and intensity
     
     for j = 1:length(output)
@@ -27,53 +29,71 @@ for i = ivec
             output(1,1,j).w02estx,x(j),'dont_combine'); %#ok<*SAGROW>
     end 
     
+    if seg_results.input_params.scan_mag==8
+    maxlen = 20;
+    elseif seg_results.input_params.scan_mag==12.8
+        maxlen = 10;
+    elseif seg_results.input_params.scan_mag== 2
+        maxlen = 100;
+    end
     pf = .15;
-    thr_pho = find(ni > 0.5e5/20);
+    
+
+    
+    thr_pho = find(ni > 0);%0.5e5/20);
     num_pixels = squeeze(sum(sum(int_masks,1),2))';
-    intensity = ni./num_pixels; %try ni here  
+    intensity = ni;%./num_pixels; %try ni here  
+
+    ind_maxlen_range = find(maxlen > seg_results.mask_distance);
+    intensity = intensity(ind_maxlen_range);
+    y = y(ind_maxlen_range);
+    stdpr = stdpr(ind_maxlen_range);
+    mask_distance = mask_distance(ind_maxlen_range);
+    
     pol = y.*intensity ./ (pf*(1+(al-1).*y));
     mon = intensity.*(pf-y) ./ (pf*(1+(al-1).*y));
-    
     mon = mon/max(mon);
     pol = pol/ max(pol);
     
     figure(ind);clf; 
     
     subplot(1,3,2);
-    plot(mask_distance(thr_pho),mon(thr_pho),'go');
+    plot(mask_distance,mon,'go');
     xlabel('distance (microns)');
     ylabel('Monomer Concentration (au)');
-    axis([-2 maxlen 0 1]);
+    axis([min(mask_distance) maxlen 0 1]);
     
     subplot(1,3,3);
-    plot(mask_distance(thr_pho),pol(thr_pho),'go');
+    plot(mask_distance,pol,'go');
     xlabel('distance (microns)');
     ylabel('Polymer Concentration (au)');
-    axis([-2 maxlen 0 1]);
+    axis([min(mask_distance) maxlen 0 1]);
     
     
     subplot(1,3,1);
-   % plot(mask_distance(thr_pho),y(thr_pho),'bo')
-    errorbar(mask_distance(thr_pho),y(thr_pho),stdpr(thr_pho),'bo');
+    % plot(mask_distance(thr_pho),y(thr_pho),'bo')
+    errorbar(mask_distance,y,stdpr,'bo');
     %errorbar(distance,y,stdpr);
     xlabel('distance (microns)');
     ylabel('FRET fraction');
     title(strrep(output(1,1,1).dataname,'_',' '));
-    axis([-2 maxlen 0 .12]);
-  % axis([-2 110 0 .13]);
+    axis([min(mask_distance) maxlen 0 .18]);
+    % axis([-2 110 0 .13]);
     
     hold on;
+    
+    
     ind_flat = find(10 > seg_results.mask_distance & seg_results.mask_distance > 5);
     int_flat = mean(intensity(ind_flat));
     fret_flat = mean(y(ind_flat));
-    int_peak = intensity(1);%max(intensity);
-    fret_peak = y(1);%max(y);
-    %%%%NOTE !!!!! SCALE CAN BE NEGATIVE IF flat portion is larger than peak
-    scale = abs ( (fret_flat - fret_peak) / (int_flat - int_peak) ) ;
-    offset = ( fret_peak * int_flat - fret_flat * int_peak ) / (int_flat - int_peak);
+    fret_peak =max(y);
+    int_peak = max(intensity); 
+    scale =  (fret_flat - fret_peak) / (int_flat - int_peak);
+    offset = ( fret_peak * int_flat - fret_flat * int_peak ) / (int_flat - int_peak);     
+
     intensity_norm = intensity *scale + offset;
     
-    plot(mask_distance(thr_pho),intensity_norm(thr_pho),'ro');
+    plot(mask_distance,intensity_norm,'ro');
     legend('FRET-fraction','Intensity');
     
 
@@ -95,7 +115,6 @@ for i = ivec
         max_len_ind = ind;
         end
     end
-    
 end
 
 if average_spindles

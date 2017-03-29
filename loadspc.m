@@ -62,33 +62,6 @@ data = dataout';
 int_image = nph;
 end
 
-function [data_smoothed] = boxcar_averager(data,reach)
-data_smoothed = zeros(size(data));
-[~,rows,cols] = size(data(1,:,:));
-for i=1+reach:rows-reach
-    for j = 1+reach:cols-reach
-        for ip = -reach:reach
-            for jp = -reach:reach                
-                data_smoothed(:,i,j) = data(:,i+ip,j+jp)+data_smoothed(:,i,j);                
-            end
-        end
-    end
-end
-end
-
-function [data_smoothed] = boxcar_averager_int(data,reach)
-data_smoothed = zeros(size(data));
-[rows,cols] = size(data);
-for i=1+reach:rows-reach
-    for j = 1+reach:cols-reach
-        for ip = -reach:reach
-            for jp = -reach:reach                
-                data_smoothed(i,j) = data(i+ip,j+jp)+data_smoothed(i,j);                
-            end
-        end
-    end
-end
-end
 
 function [data128] = make128(data256)
 data128 = zeros(4096,128,128);

@@ -31,12 +31,39 @@ for k = 1:num_images
 %     mi0{k} = imdilate(er_mask{k},se_dialate);
 %     mi0{k} = imfill(mi0{k},'holes');
     %mi0{k}=medfilt2(mi0_pre{k});
-    [mi0{k}] = make_masks(int_image0{k},floor(scan_mag),2,1:3);
+
+    [mi0{k}] = make_masks(int_image0{k},floor(scan_mag),1.5,1:3);
     s = regionprops(mi0{k},'centroid','MajorAxisLength','MinorAxisLength');
-    if ~length(s)==1
-        [mi0{k}] = make_masks(int_image0{k},floor(scan_mag),1.5,1:3);
+    
+    %IF MULTIPLE REGOINS, REMOVE REGIONS SMALLER THAN THRESHOLD AREA
+    %IF ZERO REGIONS, REDUCE THRESHOLD
+    if length(s)~=1
+        [mi0{k}] = make_masks(int_image0{k},floor(scan_mag),1.25,1:3);
         s = regionprops(mi0{k},'centroid','MajorAxisLength','MinorAxisLength');
     end
+    
+    if length(s)~=1
+        [mi0{k}] = make_masks(imgaussfilt(int_image0{k},2),floor(scan_mag),1.5,1:3);
+        if scan_mag==2
+            mi0{k}(90:128,:)=0;
+            mi0{k}(1:30,:)=0;
+            mi0{k}(:,90:128)=0;
+            mi0{k}(:,1:30)=0;
+        end
+        s = regionprops(mi0{k},'centroid','MajorAxisLength','MinorAxisLength');
+    end
+    
+    if length(s)~=1
+        [mi0{k}] = make_masks(imgaussfilt(int_image0{k},2),floor(scan_mag),2,1:3);
+        if scan_mag==2
+            mi0{k}(90:128,:)=0;
+            mi0{k}(1:30,:)=0;
+            mi0{k}(:,90:128)=0;
+            mi0{k}(:,1:30)=0;
+        end
+        s = regionprops(mi0{k},'centroid','MajorAxisLength','MinorAxisLength');
+end
+    
     centroid(1,k) = s.Centroid(1)-65;
     centroid(2,k) = s.Centroid(2)-65;
     mi{k} = imtranslate(mi0{k},[-centroid(1,k),-centroid(2,k)]);
@@ -69,7 +96,7 @@ title('last normalized masked image');
 xmin_pix=1; xmax_pix=128; ymin_pix=1; ymax_pix=128;
 
 short_axis_len = 10 ./ ((440./scan_mag) / 128); %minimum spindle short axis length in pixels 
-mcd = floor(short_axis_len*.7); %max convolution distance
+mcd = floor(short_axis_len*.5); %max convolution distance
 
 
 
@@ -178,14 +205,14 @@ end
 %     image_stack = image_stack + tran_rot_tran_image{k};    
 % end
 
-image_stack = zeros(128,128,num_images);
+image_stack_3D = zeros(128,128,num_images);
 tran_rot_tran_image_NaN = tran_rot_tran_image;
  for k = 1:num_images
      tran_rot_tran_image_NaN{k}(tran_rot_tran_image_NaN{k}==0) = NaN;
-     image_stack(:,:,k) = tran_rot_tran_image_NaN{k};    
+     image_stack_3D(:,:,k) = tran_rot_tran_image_NaN{k};    
  end
  
-image_stack = nanmean(image_stack,3);
+image_stack = nanmean(image_stack_3D,3);
 image_stack(isnan(image_stack))=0;
 
 

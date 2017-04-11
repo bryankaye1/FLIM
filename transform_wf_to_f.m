@@ -22,7 +22,7 @@ optargs = {'no_input',40000,'mean','no_input'};
 optargs(1:numvarargs) = varargin;
 [combine_wnf_wb,N_samples,use_histogram,ig_count] = optargs{:};
 
-if x>50 || strcmp(ig_count,'ignore_pcount')
+if x>500 || strcmp(ig_count,'ignore_pcount')
     if strcmp(combine_wnf_wb,'combine_background')
         wfsams = randsample(wfx,N_samples,true,pwf);
         fsams = wfsams./(wfsams+al*(1-wfsams));
@@ -49,7 +49,7 @@ if x>50 || strcmp(ig_count,'ignore_pcount')
 else 
     stdpr = 10;
     fBest = 0;
-    fprintf('photons less than 50\n');
+    fprintf('photons less than 500\n');
 end
 
 if isnan(stdpr) || isnan(fBest)

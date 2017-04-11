@@ -9,52 +9,15 @@ clear;
 %Boxcar range = 2 (reach =2, 25 pixels)
 %format is matnums,colorbar fret, greybar intensity, acquistion
 %number,colorbar FRET ticks
-low_exp = {6177:6240,[0,.4],[0,660],1,[0,.1,.2,.3,.4],0:100:600};
-high_exp = {6625:6688,[0,.4],[0,660],1,[0,.1,.2,.3,.4],0:100:600};
-low_acc = {5857:5920,[0,.15],[0,300],10,[0,.05,.1,.15,.2],[0,50,100,150,200,250]}; 
-high_acc = {5537:5600,[0,.15],[0,300],10,[0,.05,.1,.15,.2],[0,50,100,150,200,250]};
-superhigh_acc = {4841:4904,[0,.2],[0,277],10,[0,.05,.1,.15,.2],[0,50,100,150,200,250]}; %index
-notax_superhigh_acc = {26346:26473,[0,.2],[0,277],10,[0,.05,.1,.15,.2],[0,50,100,150,200,250]};
-%25956:26083 for 2p5A, which had a higher pf when taxol was added
-
-no_taxol_too_high_superhigh_acc_ = {25796:25923,[0,.2],[0,277],10,[0,.05,.1,.15,.2],[0,50,100,150,200,250]};
-
-
-
 
 pol_cbar = [0,.5];
 pol_cbar_tix = [0,.1,.2,.3,.4,.5];
 pol_gbar = [0,2200];
 pol_gbar_tix = 0:500:2200;
-
 pol_low1 = {6976:7039,pol_cbar,pol_gbar,1,pol_cbar_tix,pol_gbar_tix}; %came back
-pol_low2 = {7040:7103,pol_cbar,pol_gbar,1,pol_cbar_tix,pol_gbar_tix};
-pol_low3 = {7104:7167,pol_cbar,pol_gbar,1,pol_cbar_tix,pol_gbar_tix};
 
-pol_hi1 = {7168:7231,pol_cbar,pol_gbar,1,pol_cbar_tix,pol_gbar_tix};
-pol_hi2 = {7232:7295,pol_cbar,pol_gbar,1,pol_cbar_tix,pol_gbar_tix};
-pol_hi3 = {7296:7359,pol_cbar,pol_gbar,1,pol_cbar_tix,pol_gbar_tix};
-pol_hi4 = {7360:7423,pol_cbar,pol_gbar,1,pol_cbar_tix,pol_gbar_tix};
-pol_hi5 = {7424:7487,pol_cbar,pol_gbar,1,pol_cbar_tix,pol_gbar_tix};
-pol_hi6 = {7488:7551,pol_cbar,pol_gbar,1,pol_cbar_tix,pol_gbar_tix};
-pol_cell = {pol_low1,pol_low2,pol_low3,pol_hi1,pol_hi2,pol_hi3,pol_hi4,...
-    pol_hi5,pol_hi6};
-
-acc_jan5 = {27090:27217,[0,.2],[0,277],10,[0,.05,.1,.15,.2],[0,50,100,150,200,250]};
-don_jan5 = {26962:27089,[0,.2],[0,277],10,[0,.05,.1,.15,.2],[0,50,100,150,200,250]};
-
-spindle= {28785:28912,[0,.2],[0,277],10,[0,.05,.1,.15,.2],[0,50,100,150,200,250]};
-
-plotind = 0;
-%for j_outer = 1:length(pol_cell)
-
-sample = spindle;%pol_cell{j_outer}; 
-
-
-%for keyind = superhigh_acc
-%    clear prest prestx
-    ind =0;
-%for i=keyind{1}
+sample = {29183:29310,[0,.2]};
+ind =0;
 
 for i=sample{1}
     ind = ind + 1;
@@ -88,18 +51,10 @@ for i=sample{1}
 end
 
 ni = FLIMage_mat(1,1,1).ni;
-
-
-% try 
-%     range = FLIMage_mat(1,1,1).range;
-% catch
-%     range =0;
-% end
 boxcar_range = FLIMage_mat(1,1,1).reach;
 
 %%
 tic
-%flimin = inf;
 x_grid = 0:.002:1;
 count = 0;
 clear fmarg flimap flimap_stat intensity
@@ -107,52 +62,56 @@ clear fmarg flimap flimap_stat intensity
 for l = 1:128*128
     j = mod(l-1,128)+1;
     k = floor((l-1)/128) + 1;
-    
-    intensity(j,k) = (ni(l)/(sample{4}*((1+2*boxcar_range)^2)))*...
-        (sum(prest(:,l).*prestx(:,l))+sum(w02est(:,l).*w02estx(:,l)));
+    intensity(j,k) = ni(l);
+   % intensity(j,k) = (ni(l)/(sample{4}*((1+2*boxcar_range)^2)))*...
+    %    (sum(prest(:,l).*prestx(:,l))+sum(w02est(:,l).*w02estx(:,l)));
     [fBest,~] = transform_wf_to_f(prest(:,l), prestx(:,l),al,...
-       w02est(:,l),w02estx(:,l),100, 'n/a',10000,'mode');%,'no_histogram');
+       w02est(:,l),w02estx(:,l),600, 'n/a',10000,'mode');%,'no_histogram');
 
-   
-    %[~,cimin,cimax] = findci(yhist,xhist,.95,'confidence_bounds');
-    %f_marg_temp = interp1(xhist,yhist,x_grid,'scalar',0)';
-    %f_marg(:,l)= f_marg_temp; %#o%#ok<*MSNU> k<SAGROW>
-
-    %[~,max_ind] = max(prest(:,l));
-    %fBest = prestx(max_ind,l);
-    
-    %[~,max_ind] = max(w02est(:,l));
-    %w02Best = w02estx(max_ind,l);
-    
-    %fBest = prBest/(prBest+al*(1-prBest));
     flimap(j,k)= fBest; 
-%    flimap_stat(j,k)= fBest; %#ok<*SAGROW>
-%     if (cimin==min(xhist) && min(xhist)<0.05)
-%        count = count+1;
-%        flimap_stat(j,k) =0;
-%     end
 end
 %count %#ok<*NOPTS>
-toc
+toc%%
 
 intensity = intensity(1+boxcar_range:end-boxcar_range,1+boxcar_range:end-boxcar_range);
 flimap = flimap(1+boxcar_range:end-boxcar_range,1+boxcar_range:end-boxcar_range);
-%flimap_stat = flimap_stat(1+boxcar_range:end-boxcar_range,1+boxcar_range:end-boxcar_range);
 
-figure(plotind*3+1); clf; imagesc(flimap,sample{2}); axis square;
-set(gca,'XTickLabel','','XTick',[],'YTickLabel','','YTick',[]);
-%ti = sprintf('FLIMAGE: boxcar range is %s',num2str(boxcar_range)); title(ti);
-hcb=colorbar('eastoutside');
-set(hcb,'YTick',sample{5},'YTickLabel',[]); drawnow;
+pf = .17;
+pol = flimap.*intensity ./ (pf*(1+(al-1).*flimap));
+mon = intensity.*(pf-flimap) ./ (pf*(1+(al-1).*flimap));
+    
+figure(1); clf;subplot(1,2,1);
+imagesc(flimap,sample{2}); axis square;
+title('FRET-fraction');
+colorbar;
+%set(gca,'XTickLabel','','XTick',[],'YTickLabel','','YTick',[]);
+%hcb=colorbar('eastoutside');
+%set(hcb,'YTick',sample{5},'YTickLabel',[]);
 
-figure(plotind*3+2); clf; imshow(intensity,sample{3});
-set(gca,'XTickLabel','','XTick',[],'YTickLabel','','YTick',[]);
-%ti = sprintf('Intensity Image: boxcar range is %s',num2str(boxcar_range)); title(ti);
-gcb = colorbar('westoutside');
-set(gcb,'Ytick',sample{6},'YTickLabel',[]); drawnow;
+subplot(1,2,2); imshow(mat2gray(intensity));
+title('Intensity');
+colorbar;
+%set(gca,'XTickLabel','','XTick',[],'YTickLabel','','YTick',[]);
+%gcb = colorbar('westoutside');
+%set(gcb,'Ytick',sample{6},'YTickLabel',[]);
+
+figure(2); clf; subplot(1,2,1);
+imagesc(pol); 
+axis square;
+title('Polymer Concentration Map');
+colorbar;
+%set(gca,'XTickLabel','','XTick',[],'YTickLabel','','YTick',[]);
+%hcb=colorbar('eastoutside');
+
+subplot(1,2,2); 
+imagesc(mon);
+axis square;
+title('Monomer Concentration Map');
+colorbar;
+%gcb = colorbar('westoutside');
+
+
 %%
-
-
 for l = 1:(128-2*boxcar_range)*(128-2*boxcar_range)
     j = mod(l-1,(128-2*boxcar_range))+1;
     k = floor((l-1)/(128-2*boxcar_range)) + 1;
@@ -160,7 +119,6 @@ for l = 1:(128-2*boxcar_range)*(128-2*boxcar_range)
     y(l) = flimap(j,k);
     % stdpr(l) = flimaperr(j,k);
 end
-
 
 num_int_bins = 16;
 intbin = min(x)+(0:num_int_bins)*(max(x)-min(x))/num_int_bins;
@@ -207,16 +165,9 @@ for k = 1:num_int_bins
     end
 end
 
-figure(plotind*3+3); clf; hold on; 
+figure(3); clf; hold on; 
 plot(x,y,'.','Markersize', 3,'Color','k');
-
-if sample{1}(1)==4841
-set(gca,'XTick',0:100:300,'Ytick',0:0.04:.2,'YTickLabel',[],'XTickLabel',[]); %was 'Ytick',0:0.03:.12 
-axis([15 350 0 .2]); %Was axis([15 350 0 .12]); in original submission
-else
- plot(x_mean,y_mean, '.', 'MarkerSize',30);    
-end
-plotind = plotind+1;
+plot(x_mean,y_mean, '.', 'MarkerSize',30);    
 %end
 %ti = sprintf('Fret Fraction vs Intensity: boxcar range is %s',num2str(boxcar_range)); title(ti);
 %xlabel('Number of photons');

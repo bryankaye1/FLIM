@@ -52,7 +52,7 @@ end
     nph = nph./imap;
     
 if reach>0
-    datat = boxcar_averager(datat,reach);
+    datat = boxcar_averager_FLIM(datat,reach);
     nph = boxcar_averager_int(nph,reach); %NEEDS TESTING
 end
 

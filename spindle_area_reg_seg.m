@@ -2,11 +2,11 @@
 %Written by Olivia Stiehl and Bryan Kaye
 
 function [FLIMgroups,int_groups,reg_seg_plots] = spindle_area_reg_seg(data_path,data_name,...
-    tmini,tmaxi,FOV_fn,FOV_pth,mask_type,scan_mag,pixel_bin_width)
+    tmini,tmaxi,FOV_fn,FOV_pth,mask_type,scan_mag,pixel_bin_width,angle_dep)
 
 
 sim_im = 0;
-rot_method = 'bilinear'; %just did bilinear
+rot_method = 'nearest'; %just did bilinear
 if ~sim_im
     %FOV_pth = 'na'; FOV_fn = 'none'; mask_type = 'ellipsoid'; scan_mag = 8;
     %tmini=1; tmaxi = 4096; data_path = '/Users/bryankaye/Documents/MATLAB/data/2017-01-26/';
@@ -15,7 +15,8 @@ if ~sim_im
     num_images = length(dataname_cell);
 
     for k = 1:num_images     
-        [int_image0{k},FLIMages{k}] = spc2FLIMdata(tmini,tmaxi,dataname_cell{k},data_path,FOV_fn,FOV_pth,tsm,reach);
+        [int_image0{k},FLIMages{k}] = spc2FLIMdata(tmini,tmaxi,...
+            dataname_cell{k},data_path,FOV_fn,FOV_pth,tsm,0);
     end
 
 else
@@ -39,8 +40,8 @@ if strcmp(mask_type,'ellipsoid')
 [int_masks,mask_distance,mask_angle_rot] = ellips_seg(image_stack,...
     pixel_length,scan_mag,rot_method);
 elseif strcmp(mask_type, 'edge_distance')
-    [int_masks,mask_distance,mask_angle_rot] = dist_seg(int_image0,image_stack,...
-        pixel_length,pixel_bin_width,scan_mag);
+    [int_masks,mask_distance,mask_angle_rot,mi0] = dist_seg(int_image0,...
+        image_stack,pixel_length,pixel_bin_width,scan_mag);
 else
     input('ERROR: NO MASK TYPE SELECTED'); 
 end
@@ -48,26 +49,50 @@ end
 [FLIM_stack] = transform_FLIMage(FLIMages,registration_vectors,...
     mask_angle_rot,rot_method);
 %%
-%clear FLIM_masks FLIMseg FLIMgroups plot_FLIM_int intseg int_seg_temp int_groups
-for k = 1:size(int_masks,3)
-    FLIM_masks = repmat(int_masks(:,:,k),1,1,tmaxi-tmini+1);
-    FLIMseg = FLIM_masks .* FLIM_stack;
-    FLIMgroups(k,:) = squeeze(sum(sum(FLIMseg))); %3rd dimension is FLIM histogram
-    plot_FLIM_int(k) = sum(FLIMgroups(k,:));
-
-    intseg = int_masks(:,:,k).* imrotate(image_stack,-mask_angle_rot,rot_method,'crop');
-    image_stack_temp = intseg;
-    image_stack_temp(image_stack_temp==0)=NaN;
-    %int_groups(k) = nansum(image_stack_temp(:));
-    int_groups_phocount(k) = nanmean(image_stack_temp(:))...
-        *sum(sum(int_masks(:,:,k)))*num_images;
-     int_groups(k) = nanmean(image_stack_temp(:));
-end
+[int_groups_phocount,plot_FLIM_int,int_groups,FLIMgroups] = ...
+    apply_masks(int_masks,FLIM_stack,image_stack,mask_angle_rot,...
+    rot_method,num_images);
 
 figure(4); clf; plot(int_groups_phocount, plot_FLIM_int, 'bo');
 title('Photon counts match between intensity image and FLIMage?');
 xlabel('intensity image photons per mask');
 ylabel('FLIMage photons per mask'); drawnow;
+
+
+if angle_dep
+    mi0_props = regionprops(mi0,'centroid','MajorAxisLength',...
+        'MinorAxisLength','Orientation');
+    spindle_angle=mi0_props.Orientation;
+    
+    zero128 = zeros(128,128);
+    one128 = ones(128,128);
+    quad{1} = [one128,zero128;zero128,zero128];
+    quad{2} = [zero128,one128;zero128,zero128];
+    quad{3} = [zero128,zero128;one128,zero128];
+    quad{4} = [zero128,zero128;zero128,one128];
+    
+    for i = 1:length(quad)
+        rot_quad{i} = imrotate(quad{i},45+spindle_angle,'nearest','crop');
+        rs_rot_quad{i} = rot_quad{i}(65:192,65:192);
+        int_masks_quad = int_masks.*rs_rot_quad{i};
+        [int_groups_phocount,plot_FLIM_int,qint_groups,qFLIMgroups] = ...
+            apply_masks(int_masks_quad,FLIM_stack,image_stack,...
+            mask_angle_rot,rot_method,num_images);     
+        
+        figure(5); clf; plot(int_groups_phocount, plot_FLIM_int, 'bo');
+        title('Photon counts match between intensity image and FLIMage?');
+        xlabel('intensity image photons per mask');
+        ylabel('FLIMage photons per mask'); 
+        drawnow;
+        
+        int_groups = [int_groups,qint_groups];
+        FLIMgroups = [FLIMgroups;qFLIMgroups]; %Concatanate in a way that works for FLIM histrogra,s
+        seg_ind{i} = 1+(i-1)*length(qint_groups):i*length(qint_groups);
+        quad_mask{i} = int_masks_quad;
+    end  
+  reg_seg_plots.div_groups = seg_ind; 
+  reg_seg_plots.div_masks = quad_mask; 
+end
 
 %%
 first_image = int_image0{1};
@@ -92,4 +117,18 @@ end
 
 
 
+% for k = 1:size(int_masks,3)
+%     FLIM_masks = repmat(int_masks(:,:,k),1,1,tmaxi-tmini+1);
+%     FLIMseg = FLIM_masks .* FLIM_stack;
+%     FLIMgroups(k,:) = squeeze(sum(sum(FLIMseg))); %3rd dimension is FLIM histogram
+%     plot_FLIM_int(k) = sum(FLIMgroups(k,:));
+% 
+%     intseg = int_masks(:,:,k).* imrotate(image_stack,-mask_angle_rot,rot_method,'crop');
+%     image_stack_temp = intseg;
+%     image_stack_temp(image_stack_temp==0)=NaN;
+%     %int_groups(k) = nansum(image_stack_temp(:));
+%     int_groups_phocount(k) = nanmean(image_stack_temp(:))...
+%         *sum(sum(int_masks(:,:,k)))*num_images;
+%      int_groups(k) = nanmean(image_stack_temp(:));
+% end
 

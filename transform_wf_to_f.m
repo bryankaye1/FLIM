@@ -35,7 +35,7 @@ if x>500 || strcmp(ig_count,'ignore_pcount')
         fsams(isnan(fsams)) = 0;
         stdpr = std(fsams);
     end
-    [yhist,xhist]= histcounts(fsams,100);
+    [yhist,xhist]= histcounts(fsams,200);
     varargout{1} = yhist;
     varargout{2} = xhist;
     if strcmp(use_histogram,'mode')

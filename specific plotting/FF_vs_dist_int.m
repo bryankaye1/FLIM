@@ -1,8 +1,8 @@
 %%Used to plot polymer FF vs pixel group for spindle area FRET fraction
 %%measurements.
 
-function [ymat,varmat,imat,polmat,monmat,mask_distance] = FF_vs_dist(ivec,...
-    average_spindles,show_spindle,pf,showmon,show_masks)
+function [ymat,varmat,imat,polmat,monmat,mask_distance] = FF_vs_dist_int(ivec,...
+    average_spindles,show_spindle,pf,showmon)
 
 ind = 0;
 load('/Users/bryankaye/Documents/MATLAB/FLIM/pf_est_table');
@@ -45,108 +45,58 @@ for i = ivec
     intensity = intensity(des_ind);
     y = y(des_ind);
     stdpr = stdpr(des_ind);
+    [pfm(ind),nmon(ind)] = fit_pf_nm(intensity,y,stdpr,al);
     
-    %pol = y.*intensity ./ (pf*(1+(al-1).*y));
-
+    figure(ind); clf; hold on; errorbar(intensity,y,stdpr,'ko');
+    xmodel = 0:max(intensity)*.001:max(intensity)*1.2;
+    plot(xmodel,pf_nm_pred(al,pfm(ind),nmon(ind),xmodel),'--','Color',[0.6,0.6,0.6]);
+    xlabel('intensity (au)');
+    ylabel('FRET fraction');
+    
+    ti{ind} = [output(1,1,1).pth_data(end-10:end),...
+        strrep(strrep(output(1,1,1).dataname,'.sdt',''),'_',' ')];
+    title(ti{ind});
+    
+    pol = y.*intensity ./ (pf*(1+(al-1).*y));
     mon = intensity.*(pf-y) ./ (pf*(1+(al-1).*y));
     mon = mon/max(mon);
+    pol = pol/ max(pol);
     
-
-    [pol,polstd] = calc_pol(al,pf,y,stdpr,intensity);
-    pol_norm = pol/ max(pol);
-    polstd_norm = polstd / max(pol);
+    des_row = find(ismember(pf_est.filename,...
+        [output(1,1,1).pth_data,output(1,1,1).dataname]));
+    % pf = max([pf_est.pf_fit(des_row)+pf_est.pf_fit_std(des_row),...
+    %      pf_est.max_FRET(des_row)+pf_est.max_FRET_std(des_row)]);
     
-    ti = strrep([output(1,1,1).pth_data(end-10:end),output(1,1,1).dataname],...
-        '_',' ');
-    ti = [];
-    %insert pf table stuff here
+    pf = max([pf_est.pf_fit(des_row),pf_est.max_FRET(des_row)]);
+    %pf = pf_est.max_FRET(des_row);
     
-    if showmon
-        %Plot monomer vs distance
-        figure(ind);  
-        plot(mask_distance,mon,'bo');
-        xlabel('distance (microns)');
-        ylabel('Monomer Concentration (au)');
-        axis([min(mask_distance) maxlen 0 1]);
-        title(ti);
-    elseif ivec(end)==30731
-        FFdist_plots(ind,mask_distance,maxlen,pol_norm,polstd_norm,intensity,...
-            y,stdpr,ti,show_spindle,seg_results,show_masks,0);
-    end
+    % pf = pf_est.max_FRET(des_row)+pf_est.max_FRET_std(des_row);
     
-%     num_pho = intensity.*sum(sum(seg_results.int_masks));
-%     if sum(num_pho<500)
-%         fprintf('Photons count less than 500!'); pause;
-%     end
+    
     
     if average_spindles
         imat(ind,:) = intensity;
         ymat(ind,:) = y;
-        polmat(ind,:) = pol_norm;
+        polmat(ind,:) = pol;
         monmat(ind,:) = mon;
         varmat(ind,:) = stdpr.*stdpr;
-    else
-        ymat = 0;
-        varmat = 0;
-        imat = 0;
-        polmat = 0;
-        monmat = 0;
     end
     
 end
 
 
 if average_spindles
-    if ~(ivec(end)==30730)
-     %   y_ave_weighted = sum(ymat./varmat,1);
-      %  norm = sum(1./varmat,1);
-       % y_ave = y_ave_weighted./norm;
-        load('donor_offset.mat');
-        y_ave = mean(ymat,1);
-        y_ave = y_ave - FRET_offset;
-
-        i_ave = mean(imat,1);
-        %pol_ave = mean(polmat,1);
-        %pol_ave = y_ave.*i_ave ./ (pf*(1+(al-1).*y_ave));
-        %pol_ave = pol_ave/max(pol_ave);
-        mon_ave = mean(monmat,1);
-        std_ave = sqrt(mean(varmat,1)/(ind));
-        donor = 0;
-
-    else
-%         y_ave_weighted1 = sum(ymat(2:3,:)./varmat(2:3,:),1);
-%         y_ave_weighted2 = sum(ymat(1,:)./varmat(1,:),1);
-%         norm1 = sum(1./varmat(2:3,:),1);
-%         norm2 = sum(1./varmat(1,:),1);
-%         norm = ( norm1+norm2 ) /2;
-%         y_ave_weighted = ( y_ave_weighted1 + y_ave_weighted2 ) /2 ;
-%         
-%         y_ave = y_ave_weighted./norm;
-        
-        y_ave1 = mean(ymat(2:3,:),1);
-        y_ave2 = mean(ymat(1,:),1);
-        y_ave = (y_ave1 + y_ave2 ) / 2;
-        %y_ave = mean(ymat,1);
-        
-        i_ave1 = mean(imat(2:3,:),1);
-        i_ave2 = mean(imat(1,:),1);
-        i_ave = (i_ave1 + i_ave2 ) / 2;        
-        %i_ave = mean(imat,1);
-        %pol_ave = mean(polmat,1);
-       % pol_ave = y_ave.*i_ave ./ (pf*(1+(al-1).*y_ave));
-
-        
-        mon_ave = mean(monmat,1);
-        std_ave = sqrt(mean(varmat,1)/(ind));
-        donor=1; 
-        FRET_offset = mean(y_ave);
-        save('donor_offset.mat','FRET_offset');
-    end
+    y_ave_weighted = sum(ymat./varmat,1);
+    norm = sum(1./varmat,1);
+    y_ave = y_ave_weighted./norm;
+    %y_ave = mean(ymat,1);
+    i_ave = mean(imat,1);
+    %pol_ave = mean(polmat,1);
+    pol_ave = y_ave.*i_ave ./ (pf*(1+(al-1).*y_ave));
+    pol_ave = pol_ave/max(pol_ave);
+    mon_ave = mean(monmat,1);
+    std_ave = sqrt(mean(varmat,1)/(ind));
     
-    [polave,polave_std] = calc_pol(al,pf,y_ave,std_ave,intensity);
-    polave_norm = polave/max(polave);
-    polave_std_norm = polave_std / max(polave);
-        
     ti = [];
     if showmon
         figure(ind+1); clf;
@@ -156,8 +106,8 @@ if average_spindles
         ylabel('Monomer Concentration (au)');
         axis([min(mask_distance) maxlen 0 1]);
     else
-        FFdist_plots(ind+1,mask_distance,maxlen,polave_norm,polave_std_norm,...
-            i_ave,y_ave,std_ave,ti,0,seg_results,show_masks,donor);
+        FFdist_plots(ind+1,mask_distance,maxlen,pol_ave,i_ave,y_ave,...
+            std_ave,ti,0,seg_results);
     end
 end
 end
@@ -168,28 +118,16 @@ end
 %%
 
 
-    %fprintf('%s is %3.0f\n',ti,i);
-    
- %       des_row = find(ismember(pf_est.filename,...
- %       [output(1,1,1).pth_data,output(1,1,1).dataname]));
-  % pf = max([pf_est.pf_fit(des_row)+pf_est.pf_fit_std(des_row),...
-  %      pf_est.max_FRET(des_row)+pf_est.max_FRET_std(des_row)]);
-   
-    % pf = max([pf_est.pf_fit(des_row),pf_est.max_FRET(des_row)]);
-     %pf = pf_est.max_FRET(des_row);
-   
-   % pf = pf_est.max_FRET(des_row)+pf_est.max_FRET_std(des_row);
-
 
 
 %     des_row = find(ismember(pf_est.filename,...
 %         [output(1,1,1).pth_data,output(1,1,1).dataname]));
 %     pf = max([pf_est.pf_fit(des_row)+pf_est.pf_fit_std(des_row),...
 %         pf_est.max_FRET(des_row)+pf_est.max_FRET_std(des_row)]);
-%     
+%
 %      pf = max([pf_est.pf_fit(des_row),pf_est.max_FRET(des_row)]);
 %     pf = pf_est.max_FRET(des_row)+pf_est.max_FRET_std(des_row);
-%     
+%
 %     if isempty(pf)
 %         pf = 0.15;
 %     end

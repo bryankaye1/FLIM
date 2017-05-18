@@ -8,8 +8,9 @@ Mar2_12x = 28391:28393;
 Jan26_8x = [29472,29474,29475,29477];
 Feb23_2x = [28923:28926];
 alldays = [Feb23_2x,Jan26_8x,Mar2_12x,Mar2_8x,Mar7_8x];
+zoom8x = [Jan26_8x,Mar2_8x,Mar7_8x];
 
-ivec = alldays;%27252:27265;%[27252,27254:27257];
+ivec = zoom8x;%27252:27265;%[27252,27254:27257];
 acq_time = 400;
 ind = 0;
 dataname_ind = {};
@@ -65,7 +66,7 @@ pf_est.pf_fit = pfm';
 pf_est.pf_fit_std = pfstd';
 pf_est.max_FRET = max_FRET';
 pf_est.max_FRET_std = max_FRET_std';
-save('pf_est_table','pf_est');
+%save('pf_est_table','pf_est');
 
 
 % for j = 1:ind

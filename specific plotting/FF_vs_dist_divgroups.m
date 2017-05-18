@@ -2,6 +2,11 @@
 %%measurements.
 
 clear;
+orange = [215,97,39]/255;
+purple = [117,112,179]/255;
+green = [27,158,119]/255;
+
+
 zoom8x_Mar7 = [28519:28521,28523,28524];
 zoon8x_Mar2 = 28519:28512;
 zoom8x_Jan26 = 28491:28493;
@@ -13,12 +18,13 @@ zoom12x_donor = 28518;
 zoom8x_donor = [28522,28513:28514,28487,28527];%28527 is from 2-28, where there was no positive control
 zoom2x_donor = [28525,28526];
 
-quad_div = 29459;
+quad_div = 30699;
 
 ivec = quad_div;%28330:28332; %
 ind = 0;
 average_spindles = 1;
 show_spindle = 1;
+show_mon = 0;
 
 
 for i = ivec
@@ -28,7 +34,7 @@ for i = ivec
     load(['/Users/bryankaye/Documents/MATLAB/data/matin/matin',...
         num2str(i),'.mat']);
     if seg_results.input_params.scan_mag == 8
-        maxlen = 20;
+        maxlen = 18;
         minlen = -5.75;
     elseif seg_results.input_params.scan_mag == 12.8
         maxlen = 10;
@@ -49,10 +55,10 @@ for i = ivec
     intensity = output(1,1,1).ni;
     al = output(1,1,1).w1Best./output(1,1,1).w2Best; 
     for j = 1:length(intensity)
-        %num_pho(j) = intensity(j)*sum(sum(seg_results.int_masks(:,:,j)));
+        num_pho = sum(output(1,1,j).datahis);
         [y(j),stdpr(j)] = transform_wf_to_f(output(1,1,j).prest,...
             output(1,1,j).prestx,al,output(1,1,j).w02est,...
-            output(1,1,j).w02estx,501,'dont_combine'); %#ok<*SAGROW>
+            output(1,1,j).w02estx,num_pho,'dont_combine'); %#ok<*SAGROW>
     end 
     
                 pf = .24;
@@ -100,19 +106,30 @@ for i = ivec
                 pol = pol/ max(pol);
                 
                 ti = strrep(output(1,1,1).dataname,'_',' ');
+                ti = [];
                 %fprintf('%s is %3.0f\n',ti,i);
                 FFdist_plots(ind-1+dg,mask_distance,maxlen,mon,pol,...
                     intensity_dg,y_dg,stdpr_dg,ti,show_spindle,seg_results);
                 
-                figure(ind-1+dg); subplot(1,4,4);
-                B= imoverlay(mat2gray(seg_results.image_stack),+...
-                seg_results.div_masks{dg}(:,:,15)+seg_results.div_masks{dg}(:,:,20));
+                figure(ind-1+dg); subplot(1,3,1);
+                 B= imoverlay(mat2gray(seg_results.image_stack),...
+                 seg_results.div_masks{dg}(:,:,3),green);
+                B = imoverlay(B,seg_results.div_masks{dg}(:,:,6),orange);
+                B = imoverlay(B,seg_results.div_masks{dg}(:,:,12),purple);
+                
+                
+                
+%                 B= imoverlay(mat2gray(seg_results.image_stack),+...
+%                 seg_results.div_masks{dg}(:,:,3)+...
+%                 seg_results.div_masks{dg}(:,:,6)+ ...
+%                 seg_results.div_masks{dg}(:,:,12));
                 imshow(B,'InitialMagnification','fit');
-                num_pho = intensity(1:length(seg_results.int_masks))...
-                    .*sum(sum(seg_results.int_masks));
-                if sum(num_pho<500)
-                    fprintf('Photons count less than 500!'); pause;
-                end
+                
+%                 num_pho = intensity(1:length(seg_results.int_masks))...
+%                     .*sum(sum(seg_results.int_masks));
+%                 if sum(num_pho<500)
+%                     fprintf('Photons count less than 500!'); pause;
+%                 end
                 
                 if average_spindles
                     imat(dg,:) = intensity_dg;
@@ -128,7 +145,10 @@ end
 
 if average_spindles    
     
-    y_ave = mean(ymat,1);
+    y_ave_weighted = sum(ymat./varmat,1);
+    norm = sum(1./varmat,1);
+    y_ave = y_ave_weighted./norm;
+    
     i_ave = mean(imat,1);
     pol_ave = mean(polmat,1);
     mon_ave = mean(monmat,1);

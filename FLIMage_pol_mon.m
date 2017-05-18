@@ -16,7 +16,7 @@ pol_gbar = [0,2200];
 pol_gbar_tix = 0:500:2200;
 pol_low1 = {6976:7039,pol_cbar,pol_gbar,1,pol_cbar_tix,pol_gbar_tix}; %came back
 
-sample = {29183:29310,[0,.2]};
+sample = {29607:29734,[0,.2]};
 ind =0;
 
 for i=sample{1}
@@ -76,7 +76,7 @@ toc%%
 intensity = intensity(1+boxcar_range:end-boxcar_range,1+boxcar_range:end-boxcar_range);
 flimap = flimap(1+boxcar_range:end-boxcar_range,1+boxcar_range:end-boxcar_range);
 
-pf = .17;
+pf = .144;
 pol = flimap.*intensity ./ (pf*(1+(al-1).*flimap));
 mon = intensity.*(pf-flimap) ./ (pf*(1+(al-1).*flimap));
     

@@ -11,7 +11,7 @@ if ~sim_im
     %FOV_pth = 'na'; FOV_fn = 'none'; mask_type = 'ellipsoid'; scan_mag = 8;
     %tmini=1; tmaxi = 4096; data_path = '/Users/bryankaye/Documents/MATLAB/data/2017-01-26/';
     %data_name ='Donor_r1'; 
-    [tsm,dataname_cell] = find_filenames(data_path,data_name,0,1);
+    [tsm,dataname_cell] = find_filenames(data_path,[data_name,'_c'],0,1);
     num_images = length(dataname_cell);
 
     for k = 1:num_images     
@@ -33,21 +33,54 @@ end
 pixel_length = (440 / scan_mag) / 128;
 short_axis_len = 10 ./ ((440./scan_mag) / 128); %minimum spindle short axis length in pixels 
 max_conv_dist = floor(short_axis_len*.7);
-[image_stack,registration_vectors] = register_images(int_image0,...
-    scan_mag,rot_method);
 
-if strcmp(mask_type,'ellipsoid')
-[int_masks,mask_distance,mask_angle_rot] = ellips_seg(image_stack,...
-    pixel_length,scan_mag,rot_method);
-elseif strcmp(mask_type, 'edge_distance')
-    [int_masks,mask_distance,mask_angle_rot,mi0] = dist_seg(int_image0,...
-        image_stack,pixel_length,pixel_bin_width,scan_mag);
+
+if ~contains(data_name,'NOSPINDLE')
+    %Make image_stack by registering images
+    [image_stack,registration_vectors] = register_images(int_image0,...
+        scan_mag,rot_method);
+    
+    %Make masks from registered images
+    if strcmp(mask_type,'ellipsoid')
+        [int_masks,mask_distance,mask_angle_rot] = ellips_seg(image_stack,...
+            pixel_length,scan_mag,rot_method);
+    elseif strcmp(mask_type, 'edge_distance')
+        [int_masks,mask_distance,mask_angle_rot,mi0] = dist_seg(int_image0,...
+            image_stack,pixel_length,pixel_bin_width,scan_mag);
+    else
+        input('ERROR: NO MASK TYPE SELECTED');
+    end
+    
+    %Make FLIM_stack by registering FLIM data.
+    [FLIM_stack] = transform_FLIMage(FLIMages,registration_vectors,...
+        mask_angle_rot,rot_method);
 else
-    input('ERROR: NO MASK TYPE SELECTED'); 
+    
+    %make image_stack
+    image_stack = 0;
+    for k=1:num_images
+        image_stack = int_image0{k}+image_stack;
+    end
+    
+    %load in int_masks and mask_distance of a real spindle image
+    if ~scan_mag==12.8
+    load(['default_masks_',num2str(scan_mag),'X']);
+    else
+    load('default_masks_12X');
+    end
+    mask_angle_rot = 0;
+    
+    %make FLIM_stack
+    FLIM_stack = 0;
+    for k = 1:length(FLIMages)
+        FLIM_stack = FLIM_stack + FLIMages{k};
+    end
+    %find better names for vars
+    reg_seg_plots.mask_filename = mask_filename;
+    reg_seg_plots.mask_matin_number = mask_matin_number;
 end
 
-[FLIM_stack] = transform_FLIMage(FLIMages,registration_vectors,...
-    mask_angle_rot,rot_method);
+
 %%
 [int_groups_phocount,plot_FLIM_int,int_groups,FLIMgroups] = ...
     apply_masks(int_masks,FLIM_stack,image_stack,mask_angle_rot,...
@@ -78,13 +111,7 @@ if angle_dep
         [int_groups_phocount,plot_FLIM_int,qint_groups,qFLIMgroups] = ...
             apply_masks(int_masks_quad,FLIM_stack,image_stack,...
             mask_angle_rot,rot_method,num_images);     
-        
-        figure(5); clf; plot(int_groups_phocount, plot_FLIM_int, 'bo');
-        title('Photon counts match between intensity image and FLIMage?');
-        xlabel('intensity image photons per mask');
-        ylabel('FLIMage photons per mask'); 
-        drawnow;
-        
+
         int_groups = [int_groups,qint_groups];
         FLIMgroups = [FLIMgroups;qFLIMgroups]; %Concatanate in a way that works for FLIM histrogra,s
         seg_ind{i} = 1+(i-1)*length(qint_groups):i*length(qint_groups);

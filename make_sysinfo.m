@@ -3,7 +3,7 @@ function [] = make_sysinfo(sysinfo,skip_remake_shift,cpath, pth_irf, irfname, pt
 
 if exist([cpath,'SysInfo.txt'],'file')==2
     cppout = fopen([cpath,'SysInfo.txt'],'r+');
-    [old_filenames, count] = fscanf(cppout, '%s');
+    [old_filenames, ~] = fscanf(cppout, '%s');
     fclose(cppout);
 else
     old_filenames = 'sysinfo did not exist';
@@ -17,7 +17,7 @@ else
         num2str(shift.w2step),num2str(shift.w2min),num2str(shift.w2max),...
         num2str(shift.backstep),num2str(shift.backmin),num2str(shift.backmax)];
     
-    if ~isequal(new_filenames,old_filenames) || sysinfo ~= 0;
+    if ~isequal(new_filenames,old_filenames) || sysinfo ~= 0
         [~, ~, ~, ~, ~, ~, ~] = make_irf_wig_ext_minres(pth_irf, irfname, pth_wigs,...
             wigsname, pth_ext, extname, data_shift_name, pth_data_for_shift,...
             shift.step, shift.min, shift.max, shift.w2step, shift.w2min,...

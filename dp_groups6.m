@@ -7,28 +7,36 @@
 %pixels (via binning by intensity) into SUPER PIXELS
 %combine_exposures_FLIMage: number of FLIM data sets (exposures) you want
 %to combine into one FLIM data.
+
+%03-07: '8X_R1_S1','8X_R1_S2','8X_R1_S3','8X_R2_S4','8X_R2_S5','8X_R2_DONOR_S6'
+%03-02: '8X_R1_S1', '8X_R1_S2' ,'8X_R1_S3_HI_INT' , '8X_R1_S4_DONOR' ,'8X_R1_S5_DONOR'
+%1-26 'DA_ROUND2_spindle2','DA_ROUND2_SPINDLE2_hiint','DA_ROUND2_longer','Da_round2', 'Donor_r1'
+
+%02-23: '2X_R1_S1','2X_R1_S3','2X_R1_S4','2X_R1_S5'
+
+
 clear;
 set_matnum = 0;%Use this to set the matnumber
 num_int_bins = 0; %Use this to create equally spaced intensity groups.
-ngr = 64;%jind*100000;
+ngr = 1;%jind*100000;
 split_matin = 1; %Set to 1 to "split" set into one group, set to >1 for number of matins you want
 
 tfw = 0;
 tbac = 0;
-base_name = ['D'];
-dataname_cell = {'Donor_r1','DA_ROUND2_1P2ACC_LOINT','DA_ROUND2_1p2acc',...
-    'DA_ROUND2_SPINDLE2_hiint','DA_ROUND2_longer','DA_ROUND2_spindle2',...
-    'Da_round2','DA_ROUND2_SPINDLE3'};%{'12X_R1_S1','12X_R1_S2','12X_R1_S3_HI_INT','12X_R1_S5_DONOR'};
-cpath = '/Users/bryankaye/Documents/MATLAB/data/2017-01-26/';
-scan_mag = 8;  
+base_name = [];
+dataname_cell = {'2X_R2_DONOR_S1','2X_R2_DONOR_S2'};
+cpath = '/Users/bryankaye/Documents/MATLAB/data/2017-02-28/';
+scan_mag = 2;  
 if scan_mag==8
 bin_width = 0.5;
+%bin_width = 1.5;
 int_cor = 'ATTO8X';
 elseif scan_mag==12.8
 bin_width = 0.33;
 int_cor = 'ATTO12X';
 elseif scan_mag==2
-bin_width = 2;
+%bin_width = 2;
+bin_width = 10;
 int_cor = 'ATTO2X';
 end
 data_shift_name = 'CURRENT.MAT';%'DONOR_NORAN2_c99';%'uf1_2min_c50';The IRF can be a little offset (in time) from the data, this data is used to align/find the offset and shift the data
@@ -41,7 +49,7 @@ segment_FLIMdata=0; blurr = 2; im_thr = .03;
 w1step = .01; w1min= 1; w1max = 1; %.97 for 11-4 extract%2.11 used for cells
 w2step = .01; w2min = 3.68; w2max = 3.68; %3.62 used for cells. %3.68 used for extract
 
-spindle_area = 0; mask_type = 'edge_distance'; angle_dep = 0;
+spindle_area = 1; mask_type = 'edge_distance'; angle_dep = 0;
 make_FLIMage = 0; reach = 0;% Used for boxcar averaging FLIM data %Set to
 combine_exposures = 0; %Used for adding exposures together
 w1vec =  [];%.25:.05:2; %Set this vector to the ADDITIONAL w1 you want to set by creating new matins. Leave empty unless you want to do a w1sweep
@@ -90,7 +98,7 @@ for dataname_ind = 1:length(dataname_cell)
             pth_wigs = cpath;%'/Users/bryankaye/Documents/MATLAB/data/2017-01-03/'; %file path wiggles
             pth_data_for_shift = cpath;
             irfname = 'irf';
-            wigsname = 'wigs_2017-1-3';
+            wigsname = 'wigs_2017-03-21';
             pth_ext = pth_wigs; %ignore this
             extname = wigsname; %ignore this
             
@@ -226,6 +234,7 @@ if ~isempty(start_nums)
     fprintf('];\n');
 end
 
+beep;
 % load handel
 % sound(y,Fs);
 

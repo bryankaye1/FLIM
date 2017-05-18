@@ -17,21 +17,21 @@ num_images = length(int_image0);
 % drawnow;
 
 for k = 1:num_images
-%     %mean_im0(k) = mean2(int_image0{k});
-%     %std_im0(k) = std2(int_image0{k});
-%     %thresh(k) = mean_im0(k)+(4/scan_mag)*std_im0(k);
-%     thresh(k) = mean2(int_image0{k}(1:3,1:3))*1.5;
-%     thr_mask{k} = int_image0{k}>thresh(k);
-%     
-%     %apply erosion and then dilation
-%     mi0_pre{k} = imfill(thr_mask{k},'holes');
-%     se_erode = strel('disk',scan_mag,0);
-%     er_mask{k} = imerode(mi0_pre{k},se_erode);
-%     se_dialate = strel('disk',scan_mag,0);
-%     mi0{k} = imdilate(er_mask{k},se_dialate);
-%     mi0{k} = imfill(mi0{k},'holes');
-    %mi0{k}=medfilt2(mi0_pre{k});
-
+    % %     %mean_im0(k) = mean2(int_image0{k});
+    % %     %std_im0(k) = std2(int_image0{k});
+    % %     %thresh(k) = mean_im0(k)+(4/scan_mag)*std_im0(k);
+    % %     thresh(k) = mean2(int_image0{k}(1:3,1:3))*1.5;
+    % %     thr_mask{k} = int_image0{k}>thresh(k);
+    % %
+    % %     %apply erosion and then dilation
+    % %     mi0_pre{k} = imfill(thr_mask{k},'holes');
+    % %     se_erode = strel('disk',scan_mag,0);
+    % %     er_mask{k} = imerode(mi0_pre{k},se_erode);
+    % %     se_dialate = strel('disk',scan_mag,0);
+    % %     mi0{k} = imdilate(er_mask{k},se_dialate);
+    % %     mi0{k} = imfill(mi0{k},'holes');
+    %     %mi0{k}=medfilt2(mi0_pre{k});
+    
     [mi0{k}] = make_masks(int_image0{k},floor(scan_mag),1.5,1:3);
     s = regionprops(mi0{k},'centroid','MajorAxisLength','MinorAxisLength');
     
@@ -62,7 +62,10 @@ for k = 1:num_images
             mi0{k}(:,1:30)=0;
         end
         s = regionprops(mi0{k},'centroid','MajorAxisLength','MinorAxisLength');
-end
+    end
+    
+    %     [mi0{k}] = make_masks(imgaussfilt(int_image0{k},2),1,scan_mag,.03);
+    %     s = regionprops(mi0{k},'centroid','MajorAxisLength','MinorAxisLength');
     
     centroid(1,k) = s.Centroid(1)-65;
     centroid(2,k) = s.Centroid(2)-65;
@@ -95,7 +98,7 @@ title('last normalized masked image');
 %transform, we want to use entire image in the fourier transforms.
 xmin_pix=1; xmax_pix=128; ymin_pix=1; ymax_pix=128;
 
-short_axis_len = 10 ./ ((440./scan_mag) / 128); %minimum spindle short axis length in pixels 
+short_axis_len = 10 ./ ((440./scan_mag) / 128); %minimum spindle short axis length in pixels
 mcd = floor(short_axis_len*.5); %max convolution distance
 
 
@@ -110,7 +113,7 @@ for k = 1:num_images-1
         term3 = fft2(mi{k} ((xmin_pix:xmax_pix),(ymin_pix:ymax_pix)));
         term4 = conj(fft2(imrotate(mi{k+1} ((xmin_pix:xmax_pix),...
             (ymin_pix:ymax_pix)),theta_var,rot_method,'crop')));
-        jansC{k,theta_ind} = ifft2(term1.*term2) ./ ifft2(term3 .* term4);       
+        jansC{k,theta_ind} = ifft2(term1.*term2) ./ ifft2(term3 .* term4);
         test{k,theta_ind}(1:mcd,1:mcd) = jansC{k,theta_ind}(1:mcd,1:mcd);
         test{k,theta_ind}(mcd+1:2*mcd,1:mcd) = jansC{k,theta_ind}(1:mcd,128-mcd+1:128);
         test{k,theta_ind}(1:mcd,mcd+1:2*mcd) = jansC{k,theta_ind}(128-mcd+1:128,1:mcd);
@@ -175,10 +178,10 @@ for k = 1:num_images-1
         [ly(k),lx(k)] = ind2sub(size(nn{k}),maxind_n);
         mask_transx(k) = -(mcd-lx(k)+1);
         mask_transy(k) = -(mcd-ly(k)+1);
-    end    
+    end
     image_rotation(k+1) = image_rotation(k) + theta_max(k);
     mask_cumulative_transx(k+1) = sum(mask_transx);
-    mask_cumulative_transy(k+1) = sum(mask_transy);    
+    mask_cumulative_transy(k+1) = sum(mask_transy);
     %   fprintf('xtrans: %2.1f   ytrans: %2.1f\n', total_transx(k),total_transy(k));
     %   fprintf('theta_max %2.1f \n', theta_max(k));
 end
@@ -202,16 +205,16 @@ end
 
 % image_stack = 0;
 % for k = 1:num_images
-%     image_stack = image_stack + tran_rot_tran_image{k};    
+%     image_stack = image_stack + tran_rot_tran_image{k};
 % end
 
 image_stack_3D = zeros(128,128,num_images);
 tran_rot_tran_image_NaN = tran_rot_tran_image;
- for k = 1:num_images
-     tran_rot_tran_image_NaN{k}(tran_rot_tran_image_NaN{k}==0) = NaN;
-     image_stack_3D(:,:,k) = tran_rot_tran_image_NaN{k};    
- end
- 
+for k = 1:num_images
+    tran_rot_tran_image_NaN{k}(tran_rot_tran_image_NaN{k}==0) = NaN;
+    image_stack_3D(:,:,k) = tran_rot_tran_image_NaN{k};
+end
+
 image_stack = nanmean(image_stack_3D,3);
 image_stack(isnan(image_stack))=0;
 
@@ -229,9 +232,10 @@ figure(5); clf; subplot(3,ceil(num_images/3),1);
 
 for k = 1:num_images
     subplot(3,ceil(num_images/3),k);
-    imshow(mat2gray(int_image{k}),'InitialMagnification','fit');
+    imshow(mat2gray(di{k}.*int_image{k}),'InitialMagnification','fit');
 end
 drawnow;
+b=1;
 
 end
 

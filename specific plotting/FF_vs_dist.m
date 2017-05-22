@@ -2,10 +2,11 @@
 %%measurements.
 
 function [ymat,varmat,imat,polmat,monmat,mask_distance] = FF_vs_dist(ivec,...
-    average_spindles,show_spindle,pf,showmon,show_masks)
+    average_spindles,show_spindle,pf,showmon,show_masks,donor_offset)
 
 ind = 0;
 load('/Users/bryankaye/Documents/MATLAB/FLIM/pf_est_table');
+load('donor_offset.mat');
 for i = ivec
     clear x y distance stdpr
     ind = ind+1;
@@ -45,14 +46,17 @@ for i = ivec
     intensity = intensity(des_ind);
     y = y(des_ind);
     stdpr = stdpr(des_ind);
-    
-    %pol = y.*intensity ./ (pf*(1+(al-1).*y));
 
     mon = intensity.*(pf-y) ./ (pf*(1+(al-1).*y));
     mon = mon/max(mon);
     
-
-    [pol,polstd] = calc_pol(al,pf,y,stdpr,intensity);
+    %y =y-mean(FRET_offset); This is for doing donor subtraction on 30731
+    %spindle
+    if donor_offset
+        [pol,polstd] = calc_pol(al,pf,y-mean(FRET_offset),stdpr,intensity);
+    else
+        [pol,polstd] = calc_pol(al,pf,y,stdpr,intensity);
+    end
     pol_norm = pol/ max(pol);
     polstd_norm = polstd / max(pol);
     
@@ -70,6 +74,7 @@ for i = ivec
         axis([min(mask_distance) maxlen 0 1]);
         title(ti);
     elseif ivec(end)==30731
+
         FFdist_plots(ind,mask_distance,maxlen,pol_norm,polstd_norm,intensity,...
             y,stdpr,ti,show_spindle,seg_results,show_masks,0);
     end
@@ -101,10 +106,7 @@ if average_spindles
      %   y_ave_weighted = sum(ymat./varmat,1);
       %  norm = sum(1./varmat,1);
        % y_ave = y_ave_weighted./norm;
-        load('donor_offset.mat');
         y_ave = mean(ymat,1);
-        y_ave = y_ave - FRET_offset;
-
         i_ave = mean(imat,1);
         %pol_ave = mean(polmat,1);
         %pol_ave = y_ave.*i_ave ./ (pf*(1+(al-1).*y_ave));
@@ -134,16 +136,20 @@ if average_spindles
         %i_ave = mean(imat,1);
         %pol_ave = mean(polmat,1);
        % pol_ave = y_ave.*i_ave ./ (pf*(1+(al-1).*y_ave));
-
-        
-        mon_ave = mean(monmat,1);
-        std_ave = sqrt(mean(varmat,1)/(ind));
-        donor=1; 
-        FRET_offset = mean(y_ave);
-        save('donor_offset.mat','FRET_offset');
+       
+       
+       mon_ave = mean(monmat,1);
+       std_ave = sqrt(mean(varmat,1)/(ind));
+       donor=1;
+       FRET_offset = y_ave;
+       save('donor_offset.mat','FRET_offset');
+    end
+    if donor_offset
+        [polave,polave_std] = calc_pol(al,pf,y_ave-mean(FRET_offset),std_ave,intensity);
+    else
+        [polave,polave_std] = calc_pol(al,pf,y_ave,std_ave,intensity);
     end
     
-    [polave,polave_std] = calc_pol(al,pf,y_ave,std_ave,intensity);
     polave_norm = polave/max(polave);
     polave_std_norm = polave_std / max(polave);
         

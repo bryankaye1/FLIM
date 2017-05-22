@@ -33,9 +33,10 @@ zoom8x_Apr13 = [30635,30637];
 ivec = [28498:28501];%zoom8x_Jan26;%28330:28332; %
 average_spindles = 1;
 show_spindle = 0;
-show_masks = 0;
+show_masks = 1;
 showmon = 0;
 pf = 0.12;
+donor_offset = 0;
 
 
 
@@ -43,8 +44,8 @@ pf = 0.12;
 %hiint_28512
 %[fret, fret_var, int, pol,mon,mdist] = FF_vs_dist_int([zoom8x_Mar2,zoom8x_Jan26],average_spindles,...
 %    show_spindle,pf,showmon);
-[fret, fret_var, int, pol,mon,mdist] = FF_vs_dist(30731,average_spindles,...
-    show_spindle,pf,showmon,show_masks);
+[fret, fret_var, int, pol,mon,mdist] = FF_vs_dist(zoom8x_donor,average_spindles,...
+    show_spindle,pf,showmon,show_masks,donor_offset);
 
 %%
 % grouping = [1,1,1,2,2,3,3,3,4,5,5,5];

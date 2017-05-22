@@ -111,6 +111,9 @@ for i = ivec
                 FFdist_plots(ind-1+dg,mask_distance,maxlen,mon,pol,...
                     intensity_dg,y_dg,stdpr_dg,ti,show_spindle,seg_results);
                 
+                (ind,mask_distance,maxlen,pol,polstd,intensity,y,stdpr,...
+    ti,show_spindle,seg_results,show_masks,donor)
+                
                 figure(ind-1+dg); subplot(1,3,1);
                  B= imoverlay(mat2gray(seg_results.image_stack),...
                  seg_results.div_masks{dg}(:,:,3),green);

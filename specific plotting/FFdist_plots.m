@@ -122,10 +122,10 @@ else
     %     axis([min(mask_distance) maxlen 0 1]);
     
    subplot(1,3,3);
-    errorbr(mask_distance,pol,polstd,'k.','MarkerSize',msize_dot);
+    errorbar(mask_distance,pol,polstd,'k.','MarkerSize',msize_dot);
     xlabel('distance (microns)');
     ylabel('Polymer Concentration (au)');
-    axis([min(mask_distance)-0.5 maxlen+0.5 0 1.05]);
+    axis(ax_lim_pol);
     axis square;
     %Plot FRET fraction and intensity vs distance
     subplot(1,3,2);
@@ -133,7 +133,7 @@ else
     xlabel('distance (microns)');
     ylabel('FRET fraction');
     title(ti);
-    axis([min(mask_distance)-0.5 maxlen+0.5 0 .16]);
+    axis(ax_lim_FRET);
     % axis([-2 110 0 .13]);
     hold on;
     

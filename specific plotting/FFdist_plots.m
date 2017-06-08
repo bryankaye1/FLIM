@@ -12,7 +12,7 @@ msize_dot = 20;
 msize_aster = 10;
 yvec = 0:.01:2;
 ax_lim_FRET = [min(mask_distance)-0.5 maxlen+0.5 0 .16];
-ax_lim_pol = [min(mask_distance)-0.5 maxlen+0.5 0 1.05];
+ax_lim_pol = [min(mask_distance)-0.5 maxlen+0.5 0 1.2];
 
 if ~show_spindle
     figure(ind);clf;
@@ -37,7 +37,7 @@ if ~show_spindle
     errorbar(mask_distance,y,stdpr,'.','MarkerSize',msize_dot,'Color',purple);
     hold on;
     if donor
-    fret_peak =0.1267;%*(549.5909/370.9563); %max FRET value from matout 30731
+    fret_peak = 0.1267;%*(549.5909/370.9563); %max FRET value from matout 30731
     int_peak = 549.5909;  
     else
     fret_peak =max(y);
@@ -147,9 +147,10 @@ else
     %seg_results = varargin{1};
     subplot(1,3,1); 
     pos_dis = find(seg_results.mask_distance>0);
-    B= imoverlay(mat2gray(seg_results.image_stack),...
-        seg_results.int_masks(:,:,pos_dis(1)));    
-    imshow(B,'InitialMagnification','fit');
+    %B= imoverlay(mat2gray(seg_results.image_stack),...
+    %    seg_results.int_masks(:,:,pos_dis(1)));    
+    %imshow(B,'InitialMagnification','fit');
+    imshow(mat2gray(seg_results.image_stack),'InitialMagnification','fit');
     title('Intensity image stack');
 end
 

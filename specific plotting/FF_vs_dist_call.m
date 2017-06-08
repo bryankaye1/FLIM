@@ -26,17 +26,23 @@ zoom2x = 30736:30739;
 zoom8x_donor = [30735,30729,30730];%,30725];
 zoom12x_donor = 30743;
 
-quad_div = 29449;
+%quad_div = 29449;
+quad_div_1p5um =[30699:30702,30756:30763];
+%quad_div_1p5um_1 = [quad_div_1p5um(1),quad_div_1p5um(2:end)];
+quad_div = [30703:30706,30709:30711,30714:30718];
+
+%[quad_div_1p5um(1:9),quad_div_1p5um(12)]
+
 
 nospindle = [30648:30651,30653]; %too many pelicules
 zoom8x_Apr13 = [30635,30637];
 ivec = [28498:28501];%zoom8x_Jan26;%28330:28332; %
 average_spindles = 1;
 show_spindle = 0;
-show_masks = 1;
+show_masks = 0;
 showmon = 0;
 pf = 0.12;
-donor_offset = 0;
+donor_offset = 1;
 
 
 
@@ -44,10 +50,14 @@ donor_offset = 0;
 %hiint_28512
 %[fret, fret_var, int, pol,mon,mdist] = FF_vs_dist_int([zoom8x_Mar2,zoom8x_Jan26],average_spindles,...
 %    show_spindle,pf,showmon);
-[fret, fret_var, int, pol,mon,mdist] = FF_vs_dist(zoom8x_donor,average_spindles,...
-    show_spindle,pf,showmon,show_masks,donor_offset);
+[fret, fret_var, int, pol,mon,mdist] = FF_vs_dist2([quad_div_1p5um(1:9),quad_div_1p5um(11:12)],...
+    average_spindles,show_spindle,pf,showmon,show_masks,donor_offset);
 
 %%
+
+%load(['/Users/bryankaye/Documents/MATLAB/data/matin/matin',num2str(i),'.mat']);
+%imshow(mat2gray(seg_results.image_stack));
+
 % grouping = [1,1,1,2,2,3,3,3,4,5,5,5];
 % csvwrite('fret',fret);
 % csvwrite('fret_var',fret_var);

@@ -104,15 +104,17 @@ for i = ivec
                 mon = intensity_dg.*(pf-y_dg) ./ (pf*(1+(al-1).*y_dg));
                 mon = mon/max(mon);
                 pol = pol/ max(pol);
+                polstd = pol/20;
                 
                 ti = strrep(output(1,1,1).dataname,'_',' ');
                 ti = [];
-                %fprintf('%s is %3.0f\n',ti,i);
-                FFdist_plots(ind-1+dg,mask_distance,maxlen,mon,pol,...
-                    intensity_dg,y_dg,stdpr_dg,ti,show_spindle,seg_results);
+
+                %FFdist_plots(ind-1+dg,mask_distance,maxlen,mon,pol,...
+                 %   intensity_dg,y_dg,stdpr_dg,ti,show_spindle,seg_results);
                 
-                (ind,mask_distance,maxlen,pol,polstd,intensity,y,stdpr,...
-    ti,show_spindle,seg_results,show_masks,donor)
+                FFdist_plots(ind-1+dg,mask_distance,maxlen,pol,...
+                    polstd,intensity_dg,y_dg,stdpr_dg,...
+                    ti,show_spindle,seg_results,0,0)
                 
                 figure(ind-1+dg); subplot(1,3,1);
                  B= imoverlay(mat2gray(seg_results.image_stack),...
@@ -158,8 +160,8 @@ if average_spindles
     std_ave = sqrt(mean(varmat,1)/(ind));
     
     ti = 'Average of Samples';
-    FFdist_plots(ind+dg,mask_distance,maxlen,mon_ave,pol_ave,i_ave,y_ave,...
-        std_ave,ti,0,seg_results);
+%    FFdist_plots(ind+dg,mask_distance,maxlen,mon_ave,pol_ave,i_ave,y_ave,...
+    %    std_ave,ti,0,seg_results);
      
 end
 

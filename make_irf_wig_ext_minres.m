@@ -47,7 +47,8 @@ if bneed>0
     wig2 =  [wig2; ones(bneed,1)];  %add bins (with 1 in each added bin) to make up 1 period
 end
 %%%%%%%%%%%%  Account for background noise and wigs in IRF  %%%%%%%%%%
-irf2 = irf2-mean(irf2(1:round(length(irf2)/100))); %calculates the background noise by taking the mean of the first 1% of irf signal
+%irf2 = irf2-mean(irf2(1:round(length(irf2)/100))); %calculates the background noise by taking the mean of the first 1% of irf signal
+irf2 = irf2-mean(irf2(end-round(length(irf2)/100):end));
 irf2(irf2<0) =0; %Set all negative values to 0
 %irf2(1500:end)=0; %This line removes irf past a certain time to remove false reflections etc
 irf = irf2./wig2; % Divide out wiggles
@@ -83,7 +84,7 @@ intx = 1:sfrac:bins;
 irfint = interp1(1:length(irf),irf,intx);
 sumres = inf;
 binskeep = bins - bneed;
-
+shiftmax = 100;
 
 wigstep = 1;
 wigmin =0;

@@ -11,8 +11,10 @@ pos_dis = find(seg_results.mask_distance>0);
 msize_dot = 20;
 msize_aster = 10;
 yvec = 0:.01:2;
-ax_lim_FRET = [min(mask_distance)-0.5 maxlen+0.5 0 .16];
-ax_lim_pol = [min(mask_distance)-0.5 maxlen+0.5 0 1.2];
+ax_lim_FRET = [-7 17 0 .15]; %[min(mask_distance)-0.5 maxlen+0.5 0 .16];
+ax_lim_pol = [-7 17 0 200];%[min(mask_distance)-0.5 maxlen+0.5 0 1.2];
+
+
 
 if ~show_spindle
     figure(ind);clf;
@@ -154,5 +156,45 @@ else
     title('Intensity image stack');
 end
 
-
 end
+
+
+% if (~show_spindle) && showmon
+%     figure(ind);clf;
+%     Plot monomer vs distance
+%     subplot(1,3,3);
+%     plot(mask_distance,mon,'go');
+%     xlabel('distance (microns)');
+%     ylabel('Monomer Concentration (au)');
+%     axis([min(mask_distance) maxlen 0 1]);
+% 
+%     %Plot polymer vs distance
+%     subplot(1,2,2);
+%     errorbar(mask_distance,pol,polstd,'k.','MarkerSize',msize_dot);
+%     xlabel('distance (microns)');
+%     ylabel('Polymer Concentration (au)');
+%     axis(ax_lim_pol);
+%     axis square;
+%     
+%     
+%     %Plot FRET fraction and intensity vs distance
+%     subplot(1,2,1);     
+%     errorbar(mask_distance,y,stdpr,'.','MarkerSize',msize_dot,'Color',purple);
+%     hold on;
+%     if donor
+%     fret_peak = 0.1267;%*(549.5909/370.9563); %max FRET value from matout 30731
+%     int_peak = 549.5909;  
+%     else
+%     fret_peak =max(y);
+%     int_peak = max(intensity);
+%     end
+% 
+%     intensity_norm = intensity * fret_peak/int_peak;
+%     plot(mask_distance,intensity_norm,'*','MarkerSize',msize_aster,'Color',green);
+%     
+%    % legend('FRET-fraction','Intensity');
+%     title(ti);
+%     xlabel('distance (microns)');
+%     ylabel('FRET fraction');
+%     axis(ax_lim_FRET);
+%     axis square;

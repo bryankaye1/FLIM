@@ -23,13 +23,13 @@ split_matin = 1; %Set to 1 to "split" set into one group, set to >1 for number o
 
 tfw = 0;
 tbac = 0;
-base_name = [];
-dataname_cell = {'8X_R1_S1','8X_R1_S2','8X_R1_S3','8X_R2_S4','8X_R2_S5'};
-cpath = '/Users/bryankaye/Documents/MATLAB/data/2017-03-07/';
+base_name = ['DA_ROUND2_spindle2'];
+dataname_cell = {};
+cpath = '/Users/bryankaye/Documents/MATLAB/data/2017-01-26/';
 scan_mag = 8;  
 if scan_mag==8
 %bin_width = 0.5;
-bin_width = 1.5;
+bin_width = 0.5;
 int_cor = 'ATTO8X';
 elseif scan_mag==12.8
 bin_width = 0.33;
@@ -39,17 +39,18 @@ elseif scan_mag==2
 bin_width = 10;
 int_cor = 'ATTO2X';
 end
-data_shift_name = 'CURRENT.MAT';%'DONOR_NORAN2_c99';%'uf1_2min_c50';The IRF can be a little offset (in time) from the data, this data is used to align/find the offset and shift the data
+data_shift_name = 'TAXOL_T1_S1_8X';%'CURRENT.MAT'    ;%'DONOR_NORAN2_c99';%'uf1_2min_c50';The IRF can be a little offset (in time) from the data, this data is used to align/find the offset and shift the data
 skip_remake_shift = 1;
 
 %This section is for parameters that are zero for time-series analysis
 tsm= 1; %%This is for concatanating images that all end in '_C#' into one large image. tsm < 100;
+segment_regions = 0;
 segment_FLIMdata=0; blurr = 2; im_thr = .03;
 
 w1step = .01; w1min= 1; w1max = 1; %.97 for 11-4 extract%2.11 used for cells
 w2step = .01; w2min = 3.68; w2max = 3.68; %3.62 used for cells. %3.68 used for extract
 
-spindle_area = 1; mask_type = 'edge_distance'; angle_dep = 1;
+spindle_area = 1; mask_type = 'edge_distance'; angle_dep = 0;
 make_FLIMage = 0; reach = 0;% Used for boxcar averaging FLIM data %Set to
 combine_exposures = 0; %Used for adding exposures together
 w1vec =  [];%.25:.05:2; %Set this vector to the ADDITIONAL w1 you want to set by creating new matins. Leave empty unless you want to do a w1sweep
@@ -95,10 +96,10 @@ for dataname_ind = 1:length(dataname_cell)
             %cpath = 'C:\Users\Bryan\Documents\MATLAB\data\2016-07-31\';
             pth_irf = cpath; %file path IRF
             pth_data = cpath; %file path data
-            pth_wigs = cpath;%'/Users/bryankaye/Documents/MATLAB/data/2017-01-03/'; %file path wiggles
+            pth_wigs = '/Users/bryankaye/Documents/MATLAB/data/2017-03-21/';%'/Users/bryankaye/Documents/MATLAB/data/2017-01-03/'; %file path wiggles
             pth_data_for_shift = cpath;
             irfname = 'irf';
-            wigsname = 'wigs_2017-03-21';
+            wigsname = 'wigs';
             pth_ext = pth_wigs; %ignore this
             extname = wigsname; %ignore this
             
@@ -172,10 +173,36 @@ for dataname_ind = 1:length(dataname_cell)
                         else
                             segment_results = 0;
                         end
+                        if segment_regions
+                            %segment images into regions
+                            [FLIM_region,ni_region,ngr, segment_results]= ...
+                                make_regions(cpath,...
+                                dataname_cell{dataname_ind},tmini,tmaxi,int_cor,...
+                                cpath,mask_type,scan_mag, bin_width,angle_dep);
+                            
+                            %group pixels by intensity
+                            pmat = [];
+                            ni = [];
+                            pixs_per_bin = [];
+                            jmax = 0
+                            groups_region = [];
+                            for ngr_i=1:length(ni_region)
+                                [pmat_i,jmax_i,ni_i,pixs_per_bin_i] = ...
+                                    makengr(FLIM_region{ngr_i},ni_region{ngri},ngr);
+                                
+                                pmat = [pmat,pmat_i];
+                                ni = [ni,ni_i];
+                                pixs_per_bin = [pixs_per_bin , pixs_per_bin_i];
+                                jmax = jmax+jmax_i;  
+                                groups_region = [groups_region, length(ni)];
+                            end
+                                int_image = groups_region;
+                        end
                     end
+                    
                     if make_FLIMage
                         jmax = length(pmat);
-                    elseif ngr>1
+                    elseif ngr>1 && (segment_regions==0)
                         [pmat,jmax,ni,pixs_per_bin] = makengr(pmat,ni,ngr);
                     elseif num_int_bins>0
                         [jmax, nph_mean, pixel_counts, dataout] = make_int_bins(ni,num_int_bins,pmat);
